@@ -1,5 +1,6 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import {
+    buyTierForCurrentStore,
     clearOrders,
     deleteAdminCategory,
     deleteAdminProduct,
@@ -104,5 +105,6 @@ export function useAdmin() {
         upsertAdminDiscount,
         deleteAdminDiscount,
         resetAdminDiscounts,
+        buyTierForCurrentStore,
     }
 }

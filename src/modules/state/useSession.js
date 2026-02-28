@@ -14,6 +14,7 @@ export function useSession() {
         isStoreAdmin: session?.role === 'admin',
         storeId: session?.storeId || null,
         storeName: session?.storeName || null,
+        tier: session?.tier || null,
         login: adminLogin,
         logout: adminLogout,
     }

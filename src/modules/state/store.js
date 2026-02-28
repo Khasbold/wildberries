@@ -10,6 +10,14 @@ const ADMIN_USERS_KEY = 'wb_admin_users'
 const ADMIN_SESSION_KEY = 'wb_admin_session'
 const ADMIN_DISCOUNTS_KEY = 'wb_admin_discounts'
 
+/* ─── Tier plans ─── */
+export const TIER_PLANS = {
+    free: { id: 'free', name: 'Free', price: 0, maxProducts: 2, color: 'slate', benefits: ['Up to 2 products', 'Basic dashboard', 'Community support'] },
+    bronze: { id: 'bronze', name: 'Bronze', price: 19, maxProducts: 10, color: 'amber', benefits: ['Up to 10 products', 'Discount code tools', 'Priority listing boost', 'Email support'] },
+    silver: { id: 'silver', name: 'Silver', price: 49, maxProducts: 20, color: 'slate', benefits: ['Up to 20 products', 'Advanced analytics', 'Priority support', 'Featured store badge'] },
+    gold: { id: 'gold', name: 'Gold', price: 99, maxProducts: 100, color: 'yellow', benefits: ['Up to 100 products', 'Exclusive privileges', 'Top placement', 'VIP 24/7 support', 'Custom store theme'] },
+}
+
 function readLocalStorageJSON(key, fallback) {
     try {
         const raw = localStorage.getItem(key)
@@ -29,9 +37,9 @@ const listeners = new Set()
 /* ─── Default admin users (SuperAdmin + demo Store Owners) ─── */
 function getDefaultAdminUsers() {
     return [
-        { id: 'sa-1', username: 'superadmin', password: 'superadmin', name: 'Super Admin', role: 'superadmin', storeId: null, storeName: null },
-        { id: 'admin-1', username: 'admin1', password: 'admin1', name: 'Admin One', role: 'admin', storeId: 'store-1', storeName: 'Fashion Hub' },
-        { id: 'admin-2', username: 'admin2', password: 'admin2', name: 'Admin Two', role: 'admin', storeId: 'store-2', storeName: 'TechWorld' },
+        { id: 'sa-1', username: 'superadmin', password: 'superadmin', name: 'Super Admin', role: 'superadmin', storeId: null, storeName: null, tier: null },
+        { id: 'admin-1', username: 'admin1', password: 'admin1', name: 'Admin One', role: 'admin', storeId: 'store-1', storeName: 'Fashion Hub', tier: 'free' },
+        { id: 'admin-2', username: 'admin2', password: 'admin2', name: 'Admin Two', role: 'admin', storeId: 'store-2', storeName: 'TechWorld', tier: 'free' },
     ]
 }
 
@@ -285,6 +293,15 @@ export function upsertAdminProduct(payload) {
                 : product
         ))
     } else {
+        /* ── Tier product-limit check ── */
+        const currentSession = store.adminSession
+        if (currentSession?.role === 'admin' && currentSession?.storeId) {
+            const plan = TIER_PLANS[currentSession.tier || 'free'] || TIER_PLANS.free
+            const count = store.adminProducts.filter((p) => p.storeId === currentSession.storeId).length
+            if (count >= plan.maxProducts) {
+                return { ok: false, error: `Your ${plan.name} plan allows up to ${plan.maxProducts} products. Upgrade your tier to add more.` }
+            }
+        }
         const stockQty = Number(payload?.stockQuantity ?? 0)
         const newProduct = {
             id: `p-${Date.now()}`,
@@ -307,6 +324,7 @@ export function upsertAdminProduct(payload) {
     }
     writeLocalStorageJSON(ADMIN_PRODUCTS_KEY, store.adminProducts)
     emit()
+    return { ok: true }
 }
 
 export function deleteAdminProduct(productId) {
@@ -395,6 +413,7 @@ export function adminLogin(username, password) {
         role: user.role,
         storeId: user.storeId,
         storeName: user.storeName,
+        tier: user.tier || null,
         name: user.name,
         username: user.username,
     }
@@ -426,6 +445,7 @@ export function createAdminUser(payload) {
         role: 'admin',
         storeId,
         storeName: payload.storeName || 'New Store',
+        tier: payload.tier || 'free',
     }
     store.adminUsers = [...store.adminUsers, newUser]
     writeLocalStorageJSON(ADMIN_USERS_KEY, store.adminUsers)
@@ -437,8 +457,24 @@ export function updateAdminUser(userId, payload) {
     store.adminUsers = store.adminUsers.map((u) =>
         u.id === userId ? { ...u, ...payload } : u
     )
+    /* Keep session in sync if the current user was updated */
+    if (store.adminSession?.userId === userId) {
+        const updated = store.adminUsers.find((u) => u.id === userId)
+        if (updated) {
+            store.adminSession = { ...store.adminSession, storeName: updated.storeName, tier: updated.tier || null, name: updated.name, username: updated.username }
+            writeLocalStorageJSON(ADMIN_SESSION_KEY, store.adminSession)
+        }
+    }
     writeLocalStorageJSON(ADMIN_USERS_KEY, store.adminUsers)
     emit()
+}
+
+export function buyTierForCurrentStore(tierId) {
+    const session = store.adminSession
+    if (!session || session.role !== 'admin') return { ok: false, error: 'Only store owners can buy tiers.' }
+    if (!TIER_PLANS[tierId]) return { ok: false, error: 'Invalid tier.' }
+    updateAdminUser(session.userId, { tier: tierId })
+    return { ok: true }
 }
 
 export function deleteAdminUser(userId) {

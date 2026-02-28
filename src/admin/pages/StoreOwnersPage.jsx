@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useSession } from '../../modules/state/useSession.js'
-import { createAdminUser, updateAdminUser, deleteAdminUser, resetAdminUsers } from '../../modules/state/store.js'
+import { createAdminUser, updateAdminUser, deleteAdminUser, resetAdminUsers, TIER_PLANS } from '../../modules/state/store.js'
 import { Button } from '../components/ui/Button.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card.jsx'
 import { Input } from '../components/ui/Input.jsx'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '../components/ui/Table.jsx'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/Dialog.jsx'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/Select.jsx'
 import { Badge } from '../components/ui/Badge.jsx'
 import { Label } from '../components/ui/Label.jsx'
 
@@ -14,6 +15,14 @@ const initialForm = {
     username: '',
     password: '',
     storeName: '',
+    tier: 'free',
+}
+
+const tierBadgeClass = {
+    gold: 'bg-yellow-200 text-yellow-900 border-yellow-400',
+    silver: 'bg-gray-300 text-gray-800 border-gray-400',
+    bronze: 'bg-amber-200 text-amber-900 border-amber-400',
+    free: 'bg-slate-200 text-slate-800 border-slate-300',
 }
 
 export default function StoreOwnersPage() {
@@ -47,6 +56,7 @@ export default function StoreOwnersPage() {
             username: user.username,
             password: user.password,
             storeName: user.storeName || '',
+            tier: user.tier || 'free',
         })
         setIsModalOpen(true)
     }
@@ -65,6 +75,7 @@ export default function StoreOwnersPage() {
                 username: form.username,
                 password: form.password,
                 storeName: form.storeName,
+                tier: form.tier,
             })
         } else {
             createAdminUser({
@@ -72,6 +83,7 @@ export default function StoreOwnersPage() {
                 username: form.username,
                 password: form.password,
                 storeName: form.storeName,
+                tier: form.tier,
             })
         }
         closeModal()
@@ -97,6 +109,7 @@ export default function StoreOwnersPage() {
                                     <TableHead>Owner</TableHead>
                                     <TableHead>Username</TableHead>
                                     <TableHead>Password</TableHead>
+                                    <TableHead>Tier</TableHead>
                                     <TableHead>Store ID</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
@@ -104,7 +117,7 @@ export default function StoreOwnersPage() {
                             <TableBody>
                                 {owners.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="h-24 text-center text-slate-400">No store owners found.</TableCell>
+                                        <TableCell colSpan={7} className="h-24 text-center text-slate-400">No store owners found.</TableCell>
                                     </TableRow>
                                 ) : (
                                     owners.map((user) => (
@@ -121,6 +134,28 @@ export default function StoreOwnersPage() {
                                             <TableCell className="text-slate-500 font-mono">{user.username}</TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className="font-mono text-xs">{user.password}</Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Select
+                                                    value={user.tier || 'free'}
+                                                    onValueChange={(val) => updateAdminUser(user.id, { tier: val })}
+                                                >
+                                                    <SelectTrigger className="w-28 h-8">
+                                                        <Badge className={`text-[10px] ${tierBadgeClass[user.tier || 'free']}`}>
+                                                            {TIER_PLANS[user.tier || 'free']?.name}
+                                                        </Badge>
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {Object.values(TIER_PLANS).map((t) => (
+                                                            <SelectItem key={t.id} value={t.id}>
+                                                                <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${tierBadgeClass[t.id]}`}>
+                                                                    {t.name}
+                                                                </span>
+                                                                <span className="ml-2 text-xs text-muted-foreground">{t.maxProducts} products</span>
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
                                             </TableCell>
                                             <TableCell className="text-xs text-slate-400 font-mono">{user.storeId}</TableCell>
                                             <TableCell className="text-right space-x-2">
@@ -180,6 +215,19 @@ export default function StoreOwnersPage() {
                                 onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                                 required
                             />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Tier</Label>
+                            <Select value={form.tier} onValueChange={(val) => setForm((f) => ({ ...f, tier: val }))}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select tier" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.values(TIER_PLANS).map((t) => (
+                                        <SelectItem key={t.id} value={t.id}>{t.name} — {t.maxProducts} products</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={closeModal}>Cancel</Button>

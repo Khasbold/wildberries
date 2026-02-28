@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
+import { AlertTriangle } from 'lucide-react'
 import { useAdmin } from '../../modules/state/useAdmin.js'
 import { useSession } from '../../modules/state/useSession.js'
+import { TIER_PLANS } from '../../modules/state/store.js'
 import { Button } from '../components/ui/Button.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card.jsx'
 import { Input } from '../components/ui/Input.jsx'
@@ -11,6 +13,7 @@ import { Checkbox } from '../components/ui/Checkbox.jsx'
 import { Badge } from '../components/ui/Badge.jsx'
 import { Label } from '../components/ui/Label.jsx'
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/Tabs.jsx'
+import { Alert, AlertTitle, AlertDescription } from '../components/ui/Alert.jsx'
 
 const initialForm = {
     title: '',
@@ -29,12 +32,18 @@ const initialForm = {
 
 export default function ProductsAdminPage() {
     const { products, categories, upsertAdminProduct, deleteAdminProduct, resetAdminProducts, isSuperAdmin } = useAdmin()
-    const { adminUsers } = useSession()
+    const { adminUsers, tier } = useSession()
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingId, setEditingId] = useState(null)
     const [query, setQuery] = useState('')
     const [form, setForm] = useState(initialForm)
     const [storeTab, setStoreTab] = useState('all')
+    const [submitError, setSubmitError] = useState('')
+    const [tierAlert, setTierAlert] = useState(false)
+
+    const currentPlan = tier ? TIER_PLANS[tier] : null
+    const myProductCount = products.length
+    const tierLimitReached = !isSuperAdmin && currentPlan && myProductCount >= currentPlan.maxProducts
 
     const categoryOptions = categories.length ? categories : [{ id: 'fallback', name: 'Accessories' }]
 
@@ -56,6 +65,11 @@ export default function ProductsAdminPage() {
     }, [products, query, storeTab, isSuperAdmin])
 
     function startCreate() {
+        if (tierLimitReached) {
+            setTierAlert(true)
+            return
+        }
+        setTierAlert(false)
         setEditingId(null)
         setForm({ ...initialForm, category: categoryOptions[0].name })
         setIsModalOpen(true)
@@ -76,6 +90,7 @@ export default function ProductsAdminPage() {
         setIsModalOpen(false)
         setEditingId(null)
         setForm(initialForm)
+        setSubmitError('')
     }
 
     function onPickImage(file) {
@@ -97,7 +112,7 @@ export default function ProductsAdminPage() {
         const sizesArr = typeof form.sizes === 'string'
             ? form.sizes.split(',').map((s) => s.trim()).filter(Boolean)
             : (Array.isArray(form.sizes) ? form.sizes : [])
-        upsertAdminProduct({
+        const result = upsertAdminProduct({
             ...form,
             id: editingId || undefined,
             stockQuantity: stockQty,
@@ -105,6 +120,10 @@ export default function ProductsAdminPage() {
             colors: colorsArr,
             sizes: sizesArr,
         })
+        if (result && !result.ok) {
+            setSubmitError(result.error)
+            return
+        }
         closeModal()
     }
 
@@ -141,6 +160,28 @@ export default function ProductsAdminPage() {
                             </Tabs>
                         )}
                     </CardHeader>
+
+                    {tierAlert && (
+                        <div className="px-6 pb-2">
+                            <Alert variant="warning" className="flex items-start gap-3">
+                                <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
+                                <div className="flex-1">
+                                    <AlertTitle>Product Limit Reached</AlertTitle>
+                                    <AlertDescription>
+                                        Your <strong>{currentPlan?.name}</strong> tier allows a maximum of{' '}
+                                        <strong>{currentPlan?.maxProducts}</strong> products. You currently have{' '}
+                                        <strong>{myProductCount}</strong>.{' '}
+                                        <a href="/admin/tier-list" className="underline font-medium text-yellow-800 hover:text-yellow-950">
+                                            Upgrade your tier
+                                        </a>{' '}
+                                        to add more products.
+                                    </AlertDescription>
+                                </div>
+                                <button onClick={() => setTierAlert(false)} className="text-yellow-600 hover:text-yellow-800 text-lg leading-none">&times;</button>
+                            </Alert>
+                        </div>
+                    )}
+
                     <CardContent className="p-0">
                         <Table>
                             <TableHeader>
@@ -206,6 +247,11 @@ export default function ProductsAdminPage() {
                         <DialogDescription>Fill in the product details below.</DialogDescription>
                     </DialogHeader>
                     <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={submit}>
+                        {submitError && (
+                            <div className="md:col-span-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                {submitError}
+                            </div>
+                        )}
                         <div className="space-y-2">
                             <Label>Title</Label>
                             <Input placeholder="Title" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} required />

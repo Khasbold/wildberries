@@ -11,6 +11,7 @@ import ProductsAdminPage from './pages/ProductsAdminPage.jsx'
 import CategoriesAdminPage from './pages/CategoriesAdminPage.jsx'
 import CustomersAdminPage from './pages/CustomersAdminPage.jsx'
 import DiscountsPage from './pages/DiscountsPage.jsx'
+import TierListPage from './pages/TierListPage.jsx'
 
 export default function AdminApp() {
     const { isLoggedIn, isSuperAdmin } = useSession()
@@ -32,6 +33,7 @@ export default function AdminApp() {
                         <Route path="categories" element={<CategoriesAdminPage />} />
                         <Route path="customers" element={<CustomersAdminPage />} />
                         <Route path="discounts" element={<DiscountsPage />} />
+                        <Route path="tier-list" element={<TierListPage />} />
                     </>
                 ) : (
                     <>
@@ -42,6 +44,7 @@ export default function AdminApp() {
                         <Route path="categories" element={<CategoriesAdminPage />} />
                         <Route path="customers" element={<CustomersAdminPage />} />
                         <Route path="discounts" element={<DiscountsPage />} />
+                        <Route path="tier-list" element={<TierListPage />} />
                     </>
                 )}
                 <Route path="*" element={<Navigate to="/admin" replace />} />

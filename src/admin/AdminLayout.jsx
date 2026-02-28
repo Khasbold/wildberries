@@ -1,8 +1,9 @@
 import { Link, NavLink } from 'react-router-dom'
-import { LayoutDashboard, ShoppingBag, Package, Users, Tags, Store, LogOut, Shield, Ticket } from 'lucide-react'
+import { LayoutDashboard, ShoppingBag, Package, Users, Tags, Store, LogOut, Shield, Ticket, Crown } from 'lucide-react'
 import { Button } from './components/ui/Button.jsx'
 import { useSession } from '../modules/state/useSession.js'
 import { Badge } from './components/ui/Badge.jsx'
+import { TIER_PLANS } from '../modules/state/store.js'
 
 const superAdminMenu = [
     { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -12,6 +13,7 @@ const superAdminMenu = [
     { to: '/admin/discounts', label: 'All Discounts', icon: Ticket },
     { to: '/admin/categories', label: 'Categories', icon: Tags },
     { to: '/admin/customers', label: 'Customers', icon: Users },
+    { to: '/admin/tier-list', label: 'Tier List', icon: Crown },
 ]
 
 const storeAdminMenu = [
@@ -21,10 +23,11 @@ const storeAdminMenu = [
     { to: '/admin/discounts', label: 'Discounts', icon: Ticket },
     { to: '/admin/categories', label: 'Categories', icon: Tags },
     { to: '/admin/customers', label: 'Customers', icon: Users },
+    { to: '/admin/tier-list', label: 'Tier List', icon: Crown },
 ]
 
 export default function AdminLayout({ children }) {
-    const { session, isSuperAdmin, logout } = useSession()
+    const { session, isSuperAdmin, logout, tier } = useSession()
     const menu = isSuperAdmin ? superAdminMenu : storeAdminMenu
 
     return (
@@ -78,6 +81,17 @@ export default function AdminLayout({ children }) {
                                     <p className="text-[10px] text-slate-500">{session.storeId}</p>
                                 </div>
                             </div>
+                            {tier && TIER_PLANS[tier] && (
+                                <Badge className={`mt-2 text-[10px] ${
+                                    tier === 'gold' ? 'bg-yellow-200 text-yellow-900' :
+                                    tier === 'silver' ? 'bg-gray-300 text-gray-800' :
+                                    tier === 'bronze' ? 'bg-amber-200 text-amber-900' :
+                                    'bg-slate-200 text-slate-800'
+                                }`}>
+                                    <Crown size={10} className="mr-1" />
+                                    {TIER_PLANS[tier].name} Tier
+                                </Badge>
+                            )}
                         </div>
                     )}
                     <nav className="space-y-0.5">
