@@ -12,6 +12,8 @@ import CategoriesAdminPage from './pages/CategoriesAdminPage.jsx'
 import CustomersAdminPage from './pages/CustomersAdminPage.jsx'
 import DiscountsPage from './pages/DiscountsPage.jsx'
 import TierListPage from './pages/TierListPage.jsx'
+import HighlightsAdminPage from './pages/HighlightsAdminPage.jsx'
+import BannerAdminPage from './pages/BannerAdminPage.jsx'
 
 export default function AdminApp() {
     const { isLoggedIn, isSuperAdmin } = useSession()
@@ -34,6 +36,8 @@ export default function AdminApp() {
                         <Route path="customers" element={<CustomersAdminPage />} />
                         <Route path="discounts" element={<DiscountsPage />} />
                         <Route path="tier-list" element={<TierListPage />} />
+                        <Route path="highlights" element={<HighlightsAdminPage />} />
+                        <Route path="banners" element={<BannerAdminPage />} />
                     </>
                 ) : (
                     <>

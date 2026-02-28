@@ -123,10 +123,10 @@ export default function Header() {
 	return (
 		<header className="bg-gradient-to-r from-[#FF44C2] via-brand to-brand-dark text-white border-b border-white/20">
 			<div className="container-app py-3">
-				<div className="py-1 flex flex-wrap sm:flex-nowrap items-center gap-3 relative">
-					<div className="flex items-center gap-2 min-w-[140px]">
-						<Link to="/" className="font-extrabold text-2xl tracking-tight">wildberries</Link>
-						<button className="w-11 h-11 rounded-2xl bg-white/15 hover:bg-white/25 flex items-center justify-center border border-white/30" onClick={() => setOpenMenu(true)}>
+				<div className="py-1 flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 relative">
+					<div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+						<Link to="/" className="font-extrabold text-lg sm:text-2xl tracking-tight truncate">wildberries</Link>
+						<button className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-white/15 hover:bg-white/25 flex items-center justify-center border border-white/30 shrink-0" onClick={() => setOpenMenu(true)}>
 							<IconBurger className="text-white" />
 						</button>
 					</div>
@@ -165,7 +165,7 @@ export default function Header() {
 						)}
 					</form>
 
-					<nav className="order-2 sm:order-3 flex items-center gap-2 sm:gap-4 text-[11px] sm:text-xs ml-auto">
+					<nav className="order-2 sm:order-3 flex items-center gap-1 xs:gap-2 sm:gap-4 text-[10px] sm:text-xs ml-auto shrink-0">
 						<div className="relative" ref={langRef}>
 							<button className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/15 hover:bg-white/25" onClick={() => setShowLangDropdown((v) => !v)}>
 								<span>{localeMeta.flag}</span>
@@ -190,6 +190,10 @@ export default function Header() {
 								</div>
 							)}
 						</div>
+						<NavLink to="/stores" className="hidden md:flex flex-col items-center hover:opacity-90">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 21V10l9-7 9 7v11H3z" stroke="currentColor" strokeWidth="1.5"/><rect x="9" y="14" width="6" height="7" rx="1" stroke="currentColor" strokeWidth="1.5"/></svg>
+							<span className="mt-1">Stores</span>
+						</NavLink>
 						<button className="hidden lg:flex flex-col items-center hover:opacity-90">
 							<IconMapPin className="text-white" />
 							<span className="mt-1">{t('header.addresses')}</span>
@@ -223,7 +227,7 @@ export default function Header() {
 					</nav>
 
 					{openCart && (
-						<div ref={cartRef} className="absolute right-0 sm:right-0 left-0 sm:left-auto top-[66px] sm:top-[70px] w-full sm:w-[380px] sm:max-w-sm bg-white text-slate-900 rounded-2xl shadow-card border border-slate-200 z-40">
+						<div ref={cartRef} className="absolute right-0 left-0 sm:left-auto top-[60px] sm:top-[70px] w-full sm:w-[380px] sm:max-w-sm bg-white text-slate-900 rounded-b-2xl sm:rounded-2xl shadow-card border border-slate-200 z-40 max-h-[80vh] overflow-auto">
 							<div className="p-4 border-b font-medium">{t('common.cart')}</div>
 							<div className="max-h-80 overflow-auto divide-y">
 								{cartDetailed.length === 0 ? (

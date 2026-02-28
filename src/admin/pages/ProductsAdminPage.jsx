@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, Star } from 'lucide-react'
 import { useAdmin } from '../../modules/state/useAdmin.js'
 import { useSession } from '../../modules/state/useSession.js'
 import { TIER_PLANS } from '../../modules/state/store.js'
+import { setHighlightProduct, removeHighlightProduct, subscribe, getState } from '../../modules/state/store.js'
+import { useSyncExternalStore } from 'react'
 import { Button } from '../components/ui/Button.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card.jsx'
 import { Input } from '../components/ui/Input.jsx'
@@ -33,6 +35,8 @@ const initialForm = {
 export default function ProductsAdminPage() {
     const { products, categories, upsertAdminProduct, deleteAdminProduct, resetAdminProducts, isSuperAdmin } = useAdmin()
     const { adminUsers, tier } = useSession()
+    const state = useSyncExternalStore(subscribe, getState)
+    const highlights = state.highlights || {}
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingId, setEditingId] = useState(null)
     const [query, setQuery] = useState('')
@@ -226,7 +230,30 @@ export default function ProductsAdminPage() {
                                                             : 'Out of stock'}
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell className="text-right space-x-2">
+                                                <TableCell className="text-right space-x-1">
+                                                    {!isSuperAdmin && tier && tier !== 'free' && (
+                                                        (() => {
+                                                            const myStoreId = product.storeId
+                                                            const isHighlighted = highlights[myStoreId] === product.id
+                                                            return (
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant={isHighlighted ? 'default' : 'outline'}
+                                                                    className={isHighlighted ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : ''}
+                                                                    title={isHighlighted ? 'Remove highlight' : 'Highlight this product'}
+                                                                    onClick={() => {
+                                                                        if (isHighlighted) {
+                                                                            removeHighlightProduct(myStoreId)
+                                                                        } else {
+                                                                            setHighlightProduct(myStoreId, product.id)
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <Star size={14} className={isHighlighted ? 'fill-current' : ''} />
+                                                                </Button>
+                                                            )
+                                                        })()
+                                                    )}
                                                     <Button size="sm" variant="outline" onClick={() => startEdit(product)}>Edit</Button>
                                                     <Button size="sm" variant="destructive" onClick={() => deleteAdminProduct(product.id)}>Delete</Button>
                                                 </TableCell>

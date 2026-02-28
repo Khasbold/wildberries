@@ -35,9 +35,9 @@ export default function BannerAccordion() {
 	}, [])
 
 	return (
-		<div className="container-app py-6 md:py-8">
+		<div className="container-app py-4 md:py-8">
 			<div
-				className="grid grid-cols-1 md:flex gap-4"
+				className="grid grid-cols-1 md:flex gap-3 sm:gap-4"
 				role="tablist"
 				aria-label="Promotional banners"
 			>
@@ -49,14 +49,14 @@ export default function BannerAccordion() {
 						onMouseEnter={() => setActive(idx)}
 						onFocus={() => setActive(idx)}
 						onClick={() => setActive(idx)}
-						className={`relative overflow-hidden rounded-xl shadow-card transition-[flex-basis,transform,opacity] duration-500 md:h-48 lg:h-56 xl:h-64 focus:outline-none ${active === idx ? 'md:basis-2/3 lg:basis-2/3' : 'md:basis-1/3 lg:basis-1/3 opacity-90 hover:opacity-100'}`}
+						className={`relative overflow-hidden rounded-xl shadow-card transition-[flex-basis,transform,opacity] duration-500 h-36 sm:h-44 md:h-48 lg:h-56 xl:h-64 focus:outline-none ${active === idx ? 'md:basis-2/3 lg:basis-2/3' : 'md:basis-1/3 lg:basis-1/3 opacity-90 hover:opacity-100'}`}
 						style={{ flexBasis: active === idx ? '66%' : '33%' }}
 					>
 						<img src={s.img} alt={s.title} className="w-full h-full object-cover" />
 						<div className="absolute inset-0 bg-gradient-to-t from-black/50 to-black/0" />
-						<div className="absolute left-4 bottom-4 text-left">
-							<p className="text-white text-xl md:text-2xl font-bold drop-shadow">{s.title}</p>
-							<span className="mt-2 inline-block bg-white text-gray-900 rounded-full px-3 py-1 text-sm">{s.cta}</span>
+						<div className="absolute left-3 bottom-3 sm:left-4 sm:bottom-4 text-left">
+							<p className="text-white text-base sm:text-xl md:text-2xl font-bold drop-shadow">{s.title}</p>
+							<span className="mt-1.5 sm:mt-2 inline-block bg-white text-gray-900 rounded-full px-2.5 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm">{s.cta}</span>
 						</div>
 					</button>
 				))}

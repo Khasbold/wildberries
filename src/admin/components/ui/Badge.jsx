@@ -15,6 +15,10 @@ const badgeVariants = cva(
         warning: 'border-transparent bg-amber-100 text-amber-700',
         danger: 'border-transparent bg-rose-100 text-rose-700',
         muted: 'border-transparent bg-slate-100 text-slate-600',
+        gold: 'border-transparent bg-yellow-100 text-yellow-800',
+        silver: 'border-transparent bg-slate-200 text-slate-700',
+        bronze: 'border-transparent bg-amber-100 text-amber-800',
+        free: 'border-transparent bg-slate-100 text-slate-500',
       },
     },
     defaultVariants: {

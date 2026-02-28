@@ -50,4 +50,20 @@ body {
 
 .card-surface {
 	@apply bg-white border border-slate-200 rounded-2xl shadow-sm;
+}
+
+/* Hide scrollbar but allow scroll */
+.scrollbar-hide {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+	display: none;
+}
+
+/* Safe area padding for notched devices */
+@supports (padding: env(safe-area-inset-bottom)) {
+	.safe-bottom {
+		padding-bottom: env(safe-area-inset-bottom);
+	}
 } 

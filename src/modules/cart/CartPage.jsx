@@ -54,24 +54,24 @@ export default function CartPage() {
 	}
 
 	return (
-		<div className="container-app py-8">
-			<h1 className="text-2xl font-semibold mb-6">{t('cart.title')}</h1>
+		<div className="container-app py-4 sm:py-8">
+			<h1 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">{t('cart.title')}</h1>
 			{detailed.length === 0 ? (
 				<div className="card-surface p-6">
 					<p>{t('cart.empty')} <Link className="text-brand hover:underline" to="/catalog">{t('cart.toCatalog')}</Link></p>
 				</div>
 			) : (
-				<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-					<div className="lg:col-span-2 space-y-4">
+				<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+					<div className="lg:col-span-2 space-y-3 sm:space-y-4">
 						{detailed.map((i) => (
-							<div key={i.productId} className="card-surface p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-								<img src={i.product.thumbnail} alt={i.product.title} className="w-24 h-24 object-cover rounded" />
-								<div className="flex-1">
-									<p className="font-medium">{i.product.title}</p>
+							<div key={i.productId} className="card-surface p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+								<img src={i.product.thumbnail} alt={i.product.title} className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded shrink-0" />
+								<div className="flex-1 min-w-0">
+									<p className="font-medium text-sm sm:text-base truncate">{i.product.title}</p>
 									<p className="text-sm text-gray-500">{formatCurrencyRub(i.product.price)}</p>
 									<p className="text-xs text-gray-500">{i.product.fastDelivery ? t('common.deliveryTomorrow') : t('cart.shippingSlow')}</p>
 								</div>
-								<div className="flex items-center gap-2 self-stretch sm:self-auto">
+								<div className="flex items-center gap-1.5 sm:gap-2 self-stretch sm:self-auto flex-wrap">
 									<button className="btn-outline" onClick={() => updateCartQuantity(i.productId, Math.max(0, i.quantity - 1))}>−</button>
 									<span className="w-8 text-center">{i.quantity}</span>
 									<button className="btn-outline" onClick={() => updateCartQuantity(i.productId, i.quantity + 1)}>+</button>
@@ -100,7 +100,7 @@ export default function CartPage() {
 							</div>
 						</div>
 					</div>
-					<div className="card-surface p-6 h-max lg:sticky lg:top-40">
+					<div className="card-surface p-4 sm:p-6 h-max lg:sticky lg:top-40">
 						<p className="text-lg font-semibold mb-3">{t('cart.summary')}</p>
 						<div className="space-y-2 text-sm text-gray-600 mb-4">
 							<div className="flex justify-between">

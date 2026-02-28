@@ -9,6 +9,8 @@ const ADMIN_CATEGORIES_KEY = 'wb_admin_categories'
 const ADMIN_USERS_KEY = 'wb_admin_users'
 const ADMIN_SESSION_KEY = 'wb_admin_session'
 const ADMIN_DISCOUNTS_KEY = 'wb_admin_discounts'
+const HIGHLIGHTS_KEY = 'wb_highlights'
+const BANNERS_KEY = 'wb_banners'
 
 /* ─── Tier plans ─── */
 export const TIER_PLANS = {
@@ -140,6 +142,8 @@ const store = {
     adminUsers: (readLocalStorageJSON(ADMIN_USERS_KEY, getDefaultAdminUsers())),
     adminSession: (readLocalStorageJSON(ADMIN_SESSION_KEY, null)),
     adminDiscounts: (readLocalStorageJSON(ADMIN_DISCOUNTS_KEY, getDefaultAdminDiscounts())),
+    highlights: /** @type {{ [storeId: string]: string }} */ (readLocalStorageJSON(HIGHLIGHTS_KEY, {})),
+    banners: /** @type {{ id: string, image: string, title: string, order: number }[]} */ (readLocalStorageJSON(BANNERS_KEY, [])),
 }
 
 let snapshot = {
@@ -152,6 +156,8 @@ let snapshot = {
     adminUsers: store.adminUsers,
     adminSession: store.adminSession,
     adminDiscounts: store.adminDiscounts,
+    highlights: store.highlights,
+    banners: store.banners,
 }
 
 function emit() {
@@ -165,6 +171,8 @@ function emit() {
         adminUsers: store.adminUsers,
         adminSession: store.adminSession,
         adminDiscounts: store.adminDiscounts,
+        highlights: store.highlights,
+        banners: store.banners,
     }
     for (const l of listeners) l()
 }
@@ -539,5 +547,57 @@ export function useDiscountCode(discountId) {
         d.id === discountId ? { ...d, usedCount: d.usedCount + 1 } : d
     )
     writeLocalStorageJSON(ADMIN_DISCOUNTS_KEY, store.adminDiscounts)
+    emit()
+}
+
+/* ─── Highlights: one highlighted product per store ─── */
+
+/** Set a product as the highlighted product for a given store (replaces any previous) */
+export function setHighlightProduct(storeId, productId) {
+    store.highlights = { ...store.highlights, [storeId]: productId }
+    writeLocalStorageJSON(HIGHLIGHTS_KEY, store.highlights)
+    emit()
+}
+
+/** Remove the highlight for a given store */
+export function removeHighlightProduct(storeId) {
+    const copy = { ...store.highlights }
+    delete copy[storeId]
+    store.highlights = copy
+    writeLocalStorageJSON(HIGHLIGHTS_KEY, store.highlights)
+    emit()
+}
+
+/* ─── Banners (SuperAdmin only) ─── */
+
+export function addBanner(payload) {
+    const banner = {
+        id: `banner-${Date.now()}`,
+        image: payload?.image || '',
+        title: payload?.title || '',
+        order: store.banners.length,
+    }
+    store.banners = [...store.banners, banner]
+    writeLocalStorageJSON(BANNERS_KEY, store.banners)
+    emit()
+}
+
+export function updateBanner(id, payload) {
+    store.banners = store.banners.map((b) =>
+        b.id === id ? { ...b, ...payload } : b
+    )
+    writeLocalStorageJSON(BANNERS_KEY, store.banners)
+    emit()
+}
+
+export function deleteBanner(id) {
+    store.banners = store.banners.filter((b) => b.id !== id)
+    writeLocalStorageJSON(BANNERS_KEY, store.banners)
+    emit()
+}
+
+export function reorderBanners(banners) {
+    store.banners = banners.map((b, i) => ({ ...b, order: i }))
+    writeLocalStorageJSON(BANNERS_KEY, store.banners)
     emit()
 }

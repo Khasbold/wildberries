@@ -1,5 +1,5 @@
 import { Link, NavLink } from 'react-router-dom'
-import { LayoutDashboard, ShoppingBag, Package, Users, Tags, Store, LogOut, Shield, Ticket, Crown } from 'lucide-react'
+import { LayoutDashboard, ShoppingBag, Package, Users, Tags, Store, LogOut, Shield, Ticket, Crown, Sparkles, Image } from 'lucide-react'
 import { Button } from './components/ui/Button.jsx'
 import { useSession } from '../modules/state/useSession.js'
 import { Badge } from './components/ui/Badge.jsx'
@@ -14,6 +14,8 @@ const superAdminMenu = [
     { to: '/admin/categories', label: 'Categories', icon: Tags },
     { to: '/admin/customers', label: 'Customers', icon: Users },
     { to: '/admin/tier-list', label: 'Tier List', icon: Crown },
+    { to: '/admin/highlights', label: 'Highlights', icon: Sparkles },
+    { to: '/admin/banners', label: 'Banner', icon: Image },
 ]
 
 const storeAdminMenu = [

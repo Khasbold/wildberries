@@ -191,6 +191,22 @@ export default function OrdersAdminPage() {
     XLSX.writeFile(wb, `orders_export_${new Date().toISOString().slice(0, 10)}.xlsx`)
   }
 
+  const TAB_COLORS = {
+    All: '',
+    Pending: 'data-[state=active]:bg-amber-100 data-[state=active]:text-amber-800',
+    Completed: 'data-[state=active]:bg-emerald-100 data-[state=active]:text-emerald-800',
+    Cancelled: 'data-[state=active]:bg-rose-100 data-[state=active]:text-rose-800',
+    Refunded: 'data-[state=active]:bg-slate-200 data-[state=active]:text-slate-700',
+  }
+
+  const TAB_BADGE_COLORS = {
+    All: '',
+    Pending: 'border-amber-300 text-amber-700',
+    Completed: 'border-emerald-300 text-emerald-700',
+    Cancelled: 'border-rose-300 text-rose-700',
+    Refunded: 'border-slate-300 text-slate-600',
+  }
+
   const canPrev = safePage > 1
   const canNext = safePage < totalPages
 
@@ -217,9 +233,9 @@ export default function OrdersAdminPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             {tabs.map((tab) => (
-              <TabsTrigger key={tab} value={tab}>
+              <TabsTrigger key={tab} value={tab} className={TAB_COLORS[tab]}>
                 {tab}
-                <Badge variant="outline" className="ml-1.5 text-[10px] px-1.5 py-0">{counts[tab]}</Badge>
+                <Badge variant="outline" className={`ml-1.5 text-[10px] px-1.5 py-0 ${TAB_BADGE_COLORS[tab]}`}>{counts[tab]}</Badge>
               </TabsTrigger>
             ))}
           </TabsList>

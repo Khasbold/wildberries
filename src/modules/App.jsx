@@ -8,6 +8,8 @@ import CartPage from './cart/CartPage.jsx'
 import CheckoutPage from './checkout/CheckoutPage.jsx'
 import AccountPage from './account/AccountPage.jsx'
 import OrdersPage from './orders/OrdersPage.jsx'
+import StoresPage from './stores/StoresPage.jsx'
+import StoreDetailPage from './stores/StoreDetailPage.jsx'
 import AdminApp from '../admin/AdminApp.jsx'
 
 export default function App() {
@@ -16,6 +18,8 @@ export default function App() {
 			<Route path="/admin/*" element={<AdminApp />} />
 			<Route path="/" element={<Layout><HomePage /></Layout>} />
 			<Route path="/catalog" element={<Layout><CatalogPage /></Layout>} />
+			<Route path="/stores" element={<Layout><StoresPage /></Layout>} />
+			<Route path="/stores/:storeId" element={<Layout><StoreDetailPage /></Layout>} />
 			<Route path="/product/:id" element={<Layout><ProductPage /></Layout>} />
 			<Route path="/wishlist" element={<Layout><WishlistPage /></Layout>} />
 			<Route path="/cart" element={<Layout><CartPage /></Layout>} />

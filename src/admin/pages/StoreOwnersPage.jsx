@@ -18,11 +18,11 @@ const initialForm = {
     tier: 'free',
 }
 
-const tierBadgeClass = {
-    gold: 'bg-yellow-200 text-yellow-900 border-yellow-400',
-    silver: 'bg-gray-300 text-gray-800 border-gray-400',
-    bronze: 'bg-amber-200 text-amber-900 border-amber-400',
-    free: 'bg-slate-200 text-slate-800 border-slate-300',
+const tierVariant = {
+    gold: 'gold',
+    silver: 'silver',
+    bronze: 'bronze',
+    free: 'free',
 }
 
 export default function StoreOwnersPage() {
@@ -141,16 +141,16 @@ export default function StoreOwnersPage() {
                                                     onValueChange={(val) => updateAdminUser(user.id, { tier: val })}
                                                 >
                                                     <SelectTrigger className="w-28 h-8">
-                                                        <Badge className={`text-[10px] ${tierBadgeClass[user.tier || 'free']}`}>
+                                                        <Badge variant={tierVariant[user.tier || 'free']}>
                                                             {TIER_PLANS[user.tier || 'free']?.name}
                                                         </Badge>
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         {Object.values(TIER_PLANS).map((t) => (
                                                             <SelectItem key={t.id} value={t.id}>
-                                                                <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${tierBadgeClass[t.id]}`}>
+                                                                <Badge variant={tierVariant[t.id]} className="text-[11px]">
                                                                     {t.name}
-                                                                </span>
+                                                                </Badge>
                                                                 <span className="ml-2 text-xs text-muted-foreground">{t.maxProducts} products</span>
                                                             </SelectItem>
                                                         ))}

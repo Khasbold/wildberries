@@ -78,11 +78,11 @@ export default function ProductCard({ product }) {
 					{wished ? <IconHeartFilled /> : '♡'}
 				</button>
 				{/* Small promo pills at bottom-left */}
-				<div className="absolute left-2 bottom-2 flex flex-col gap-1 leading-none">
-					<span className="inline-flex w-max px-2 py-0.5 rounded-full bg-rose-600 text-white text-[11px] font-bold">-{discount}%</span>
-					<span className="inline-flex w-max px-2 py-0.5 rounded-full bg-pink-500 text-white text-[11px] font-bold">-9% с клубом</span>
-					<span className="inline-flex w-max px-2 py-0.5 rounded-full bg-cyan-600 text-white text-[11px] font-bold">₽ 60 за отзыв</span>
-					<span className="inline-flex w-max px-2 py-0.5 rounded-full bg-orange-500 text-white text-[11px] font-semibold">СКИДКИ ПОСПЕЛИ</span>
+				<div className="absolute left-1.5 sm:left-2 bottom-1.5 sm:bottom-2 flex flex-col gap-0.5 sm:gap-1 leading-none">
+					<span className="inline-flex w-max px-1.5 sm:px-2 py-0.5 rounded-full bg-rose-600 text-white text-[9px] sm:text-[11px] font-bold">-{discount}%</span>
+					<span className="hidden xs:inline-flex w-max px-1.5 sm:px-2 py-0.5 rounded-full bg-pink-500 text-white text-[9px] sm:text-[11px] font-bold">-9% с клубом</span>
+					<span className="hidden sm:inline-flex w-max px-1.5 sm:px-2 py-0.5 rounded-full bg-cyan-600 text-white text-[9px] sm:text-[11px] font-bold">₽ 60 за отзыв</span>
+					<span className="hidden sm:inline-flex w-max px-1.5 sm:px-2 py-0.5 rounded-full bg-orange-500 text-white text-[9px] sm:text-[11px] font-semibold">СКИДКИ ПОСПЕЛИ</span>
 				</div>
 				{/* Quick view pill on hover */}
 				<Link to={`/product/${product.id}`} className="absolute left-1/2 -translate-x-1/2 bottom-3 md:bottom-3 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -90,11 +90,11 @@ export default function ProductCard({ product }) {
 				</Link>
 			</div>
 
-			<div className="p-3 flex-1 flex flex-col gap-1.5">
-				<Link to={`/product/${product.id}`} className="font-medium line-clamp-2 hover:underline leading-tight text-[14px]">{product.title}</Link>
-				<div className="flex items-end gap-2 mt-0.5">
-					<p className="text-rose-600 text-[22px] font-extrabold leading-none">{formatCurrencyRub(product.price)}</p>
-					<p className="text-xs text-gray-500 line-through leading-none">{formatCurrencyRub(oldPrice)}</p>
+			<div className="p-2 sm:p-3 flex-1 flex flex-col gap-1 sm:gap-1.5">
+				<Link to={`/product/${product.id}`} className="font-medium line-clamp-2 hover:underline leading-tight text-[12px] sm:text-[14px]">{product.title}</Link>
+				<div className="flex items-end gap-1.5 sm:gap-2 mt-0.5">
+					<p className="text-rose-600 text-[17px] sm:text-[22px] font-extrabold leading-none">{formatCurrencyRub(product.price)}</p>
+					<p className="text-[10px] sm:text-xs text-gray-500 line-through leading-none">{formatCurrencyRub(oldPrice)}</p>
 				</div>
 				<p className="text-[11px] text-rose-600/80 leading-none">{t('productCard.withWallet')}</p>
 				<div className="text-[12px] text-gray-800 flex items-center gap-1 leading-tight">
@@ -106,7 +106,7 @@ export default function ProductCard({ product }) {
 					<span className="text-gray-500">{t('productCard.reviews', { count: new Intl.NumberFormat('ru-RU').format(reviews) })}</span>
 				</div>
 				<div className="mt-auto pt-1">
-					<button disabled={!product.inStock} className="w-full rounded-full bg-brand text-white hover:bg-brand-dark py-2 text-sm flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed" onClick={() => addToCart(product.id, 1)}>
+					<button disabled={!product.inStock} className="w-full rounded-full bg-brand text-white hover:bg-brand-dark py-1.5 sm:py-2 text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-2 disabled:opacity-60 disabled:cursor-not-allowed" onClick={() => addToCart(product.id, 1)}>
 						<IconCart className="text-white" />
 						{product.inStock ? (product.fastDelivery ? t('productCard.tomorrow') : t('productCard.dayAfterTomorrow')) : t('common.outOfStock')}
 					</button>

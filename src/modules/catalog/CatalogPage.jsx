@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { categories, products } from '../data/products.js'
 import ProductCard from './components/ProductCard.jsx'
@@ -38,6 +38,8 @@ export default function CatalogPage() {
 	const fast = q.get('fast') === '1'
 	const stockOnly = q.get('stock') === '1'
 	const page = Math.max(1, parseInt(q.get('page') || '1', 10))
+
+	const [showFilters, setShowFilters] = useState(false)
 
 	function formatCurrencyRub(n) {
 		try {
@@ -85,15 +87,15 @@ export default function CatalogPage() {
 	}
 
 	return (
-		<div className="container-app py-8">
-			<div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-				<h1 className="text-2xl font-semibold">{t('catalog.title')}</h1>
-				<div className="flex items-center gap-2 flex-wrap">
+		<div className="container-app py-4 sm:py-8">
+			<div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 mb-4 sm:mb-6">
+				<h1 className="text-xl sm:text-2xl font-semibold">{t('catalog.title')}</h1>
+				<div className="flex items-center gap-1.5 sm:gap-2 flex-wrap overflow-x-auto scrollbar-hide max-w-full">
 					{categories.map((c) => (
 						<Link
 							key={c}
 							to={buildUrl({ cat: c, page: '1' })}
-							className={`badge ${c === cat ? 'bg-brand text-white' : ''}`}
+							className={`badge whitespace-nowrap ${c === cat ? 'bg-brand text-white' : ''}`}
 						>
 							{translateCategory(c, locale)}
 						</Link>
@@ -101,9 +103,13 @@ export default function CatalogPage() {
 				</div>
 			</div>
 
-			<div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5">
+			<div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 sm:gap-5">
 				<aside className="card-surface p-4 h-max lg:sticky lg:top-40 space-y-4">
-					<p className="font-semibold">{t('catalog.filters')}</p>
+					<button className="w-full flex items-center justify-between lg:pointer-events-none" onClick={() => setShowFilters((v) => !v)}>
+						<p className="font-semibold">{t('catalog.filters')}</p>
+						<span className="lg:hidden text-slate-400 text-sm">{showFilters ? '▲' : '▼'}</span>
+					</button>
+					<div className={`space-y-4 ${showFilters ? '' : 'hidden lg:block'}`}>
 					<div className="space-y-2">
 						<label className="text-sm text-slate-600">{t('catalog.minPrice')}</label>
 						<input type="number" value={min || ''} onChange={(e) => setParam({ min: e.target.value || '' })} className="w-full border border-slate-200 rounded-xl px-3 py-2" />
@@ -131,6 +137,7 @@ export default function CatalogPage() {
 					</label>
 
 					<button onClick={() => navigate('/catalog')} className="btn-outline w-full">{t('common.resetFilters')}</button>
+					</div>
 				</aside>
 
 				<div>
@@ -154,7 +161,7 @@ export default function CatalogPage() {
 					{visible.length === 0 ? (
 						<p>{t('catalog.noResults')}</p>
 					) : (
-						<div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
+						<div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
 							{visible.map((p) => (
 								<div key={p.id} className="relative">
 									{p.fastDelivery && <span className="absolute z-10 left-2 top-2 badge bg-emerald-100 text-emerald-700">{t('catalog.tomorrowTag')}</span>}
