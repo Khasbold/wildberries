@@ -1,14 +1,13 @@
 import { Link } from 'react-router-dom'
-import { useEffect, useMemo, useState, useSyncExternalStore, useCallback } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { products } from '../data/products.js'
 import { subscribe, getState } from '../state/store.js'
 import ProductCard from '../catalog/components/ProductCard.jsx'
 import BannerAccordion from './components/BannerAccordion.jsx'
 import { useI18n } from '../i18n/useI18n.js'
-import { translateCategory } from '../i18n/config.js'
 
 export default function HomePage() {
-	const { t, locale } = useI18n()
+	const { t } = useI18n()
 	const state = useSyncExternalStore(subscribe, getState)
 	const highlights = state.highlights || {}
 	const adminProducts = state.adminProducts || []
@@ -41,8 +40,7 @@ export default function HomePage() {
 
 	const featured = products.slice(0, 8)
 	const fresh = products.slice(4, 12)
-	const topRated = [...products].sort((a, b) => b.rating - a.rating).slice(0, 6)
-	const categories = [...new Set(products.map((p) => p.category))]
+	const topRated = [...products].sort((a, b) => (state.productViews?.[b.id] || 0) - (state.productViews?.[a.id] || 0)).slice(0, 6)
 
 	return (
 		<div className="space-y-8">
@@ -101,19 +99,7 @@ export default function HomePage() {
 				<BannerAccordion />
 			</section>
 
-			<section className="container-app -mt-1">
-				<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-					{categories.map((cat) => (
-						<Link
-							key={cat}
-							to={`/catalog?cat=${encodeURIComponent(cat)}`}
-							className="card-surface px-4 py-3 hover:border-brand/40 hover:shadow-card transition-all text-sm font-medium"
-						>
-							{translateCategory(cat, locale)}
-						</Link>
-					))}
-				</div>
-			</section>
+
 
 			{/* Highlighted products from stores */}
 			{highlightedProducts.length > 0 && (
@@ -175,7 +161,7 @@ export default function HomePage() {
 									<img src={item.thumbnail} alt={item.title} className="w-14 h-14 rounded-lg object-cover" />
 									<div className="min-w-0">
 										<p className="text-sm font-medium truncate">{item.title}</p>
-										<p className="text-xs text-slate-500">⭐ {item.rating.toFixed(1)} • {item.brand}</p>
+										<p className="text-xs text-slate-500">{state.productViews?.[item.id] || 0} {t('product.watched')} • {item.brand}</p>
 									</div>
 								</Link>
 							))}

@@ -12,6 +12,7 @@ export function useStores() {
             id: u.storeId,
             name: u.storeName || u.storeId,
             owner: u.name,
+            image: u.storeImage || null,
             tier: u.tier || 'free',
             productCount: adminProducts.filter((p) => p.storeId === u.storeId).length,
         }))

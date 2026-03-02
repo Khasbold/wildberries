@@ -60,11 +60,11 @@ export default function CheckoutPage() {
         setPromoError('')
     }
 
-    function formatCurrencyRub(n) {
+    function formatCurrency(n) {
         try {
-            return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(n)
+            return new Intl.NumberFormat('mn-MN', { maximumFractionDigits: 0 }).format(Math.round(n)) + '₮'
         } catch {
-            return `${Math.round(n)} ₽`
+            return `${Math.round(n)}₮`
         }
     }
 
@@ -239,7 +239,7 @@ export default function CheckoutPage() {
                                     <p className="text-sm truncate">{i.product.title}</p>
                                     <p className="text-xs text-slate-500">x{i.quantity}</p>
                                 </div>
-                                <span className="text-sm font-medium">{formatCurrencyRub(i.product.price * i.quantity)}</span>
+                                <span className="text-sm font-medium">{formatCurrency(i.product.price * i.quantity)}</span>
                             </div>
                         ))}
                     </div>
@@ -258,16 +258,16 @@ export default function CheckoutPage() {
                         {promoError && <p className="text-xs text-red-500 mt-2">{promoError}</p>}
                         {appliedDiscount && (
                             <p className="text-xs text-emerald-600 mt-2">
-                                ✓ Code <span className="font-mono font-semibold">{appliedDiscount.code}</span> applied — {appliedDiscount.discountValue} ₽ off
+                                ✓ Code <span className="font-mono font-semibold">{appliedDiscount.code}</span> applied — {appliedDiscount.discountValue} ₮ off
                             </p>
                         )}
                     </div>
 
                     <div className="border-t mt-4 pt-3 text-sm space-y-2">
-                        <div className="flex justify-between"><span>{t('checkout.items')}</span><span>{formatCurrencyRub(subtotal)}</span></div>
-                        <div className="flex justify-between"><span>{t('cart.discount')}</span><span className="text-emerald-600">-{formatCurrencyRub(discount)}</span></div>
-                        <div className="flex justify-between"><span>{t('checkout.delivery')}</span><span>{delivery ? formatCurrencyRub(delivery) : t('common.free')}</span></div>
-                        <div className="flex justify-between font-semibold text-base"><span>{t('checkout.total')}</span><span>{formatCurrencyRub(total)}</span></div>
+                        <div className="flex justify-between"><span>{t('checkout.items')}</span><span>{formatCurrency(subtotal)}</span></div>
+                        <div className="flex justify-between"><span>{t('cart.discount')}</span><span className="text-emerald-600">-{formatCurrency(discount)}</span></div>
+                        <div className="flex justify-between"><span>{t('checkout.delivery')}</span><span>{delivery ? formatCurrency(delivery) : t('common.free')}</span></div>
+                        <div className="flex justify-between font-semibold text-base"><span>{t('checkout.total')}</span><span>{formatCurrency(total)}</span></div>
                         <p className="text-xs text-slate-500">{t('checkout.vatNote')}</p>
                     </div>
 

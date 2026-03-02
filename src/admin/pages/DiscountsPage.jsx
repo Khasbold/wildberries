@@ -17,7 +17,7 @@ export default function DiscountsPage() {
     const [query, setQuery] = useState('')
     const [dialogOpen, setDialogOpen] = useState(false)
     const [editing, setEditing] = useState(null)
-    const [form, setForm] = useState({ code: '', discountValue: '', quantity: '' })
+    const [form, setForm] = useState({ code: '', discountValue: '', quantity: '', startDate: new Date().toISOString().slice(0, 10), expireDate: '' })
 
     const visible = useMemo(() => {
         if (!query.trim()) return discounts
@@ -36,7 +36,7 @@ export default function DiscountsPage() {
 
     function startCreate() {
         setEditing(null)
-        setForm({ code: '', discountValue: '', quantity: '' })
+        setForm({ code: '', discountValue: '', quantity: '', startDate: new Date().toISOString().slice(0, 10), expireDate: '' })
         setDialogOpen(true)
     }
 
@@ -46,6 +46,8 @@ export default function DiscountsPage() {
             code: disc.code,
             discountValue: String(disc.discountValue),
             quantity: String(disc.quantity),
+            startDate: disc.startDate || new Date().toISOString().slice(0, 10),
+            expireDate: disc.expireDate || '',
         })
         setDialogOpen(true)
     }
@@ -63,9 +65,11 @@ export default function DiscountsPage() {
                 code,
                 discountValue,
                 quantity,
+                startDate: form.startDate,
+                expireDate: form.expireDate,
             })
         } else {
-            upsertAdminDiscount({ code, discountValue, quantity })
+            upsertAdminDiscount({ code, discountValue, quantity, startDate: form.startDate, expireDate: form.expireDate })
         }
         setDialogOpen(false)
     }
@@ -102,9 +106,11 @@ export default function DiscountsPage() {
                             <TableRow>
                                 <TableHead>Code</TableHead>
                                 {isSuperAdmin && <TableHead>Store</TableHead>}
-                                <TableHead>Discount (₽)</TableHead>
+                                <TableHead>Discount (₮)</TableHead>
                                 <TableHead>Remaining</TableHead>
                                 <TableHead>Used</TableHead>
+                                <TableHead>Start</TableHead>
+                                <TableHead>Expires</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
@@ -112,7 +118,7 @@ export default function DiscountsPage() {
                         <TableBody>
                             {visible.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={isSuperAdmin ? 7 : 6} className="h-24 text-center text-slate-400">
+                                    <TableCell colSpan={isSuperAdmin ? 9 : 8} className="h-24 text-center text-slate-400">
                                         No discount codes found.
                                     </TableCell>
                                 </TableRow>
@@ -137,7 +143,7 @@ export default function DiscountsPage() {
                                                 </TableCell>
                                             )}
                                             <TableCell className="font-semibold text-emerald-600">
-                                                −{disc.discountValue} ₽
+                                                −{disc.discountValue} ₮
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant={remaining > 0 ? 'success' : 'danger'}>
@@ -146,6 +152,18 @@ export default function DiscountsPage() {
                                             </TableCell>
                                             <TableCell className="text-slate-500">
                                                 {disc.usedCount} / {disc.quantity}
+                                            </TableCell>
+                                            <TableCell className="text-xs text-slate-500 whitespace-nowrap">
+                                                {disc.startDate || '—'}
+                                            </TableCell>
+                                            <TableCell className="text-xs whitespace-nowrap">
+                                                {disc.expireDate ? (
+                                                    <span className={new Date(disc.expireDate) < new Date() ? 'text-red-500 font-medium' : 'text-slate-500'}>
+                                                        {disc.expireDate}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-slate-400">No expiry</span>
+                                                )}
                                             </TableCell>
                                             <TableCell>
                                                 <button
@@ -225,7 +243,7 @@ export default function DiscountsPage() {
                             <p className="text-xs text-slate-400 mt-1">Unique code customers will enter at checkout.</p>
                         </div>
                         <div>
-                            <Label>Discount Value (₽)</Label>
+                            <Label>Discount Value (₮)</Label>
                             <Input
                                 type="number"
                                 min="1"
@@ -247,6 +265,29 @@ export default function DiscountsPage() {
                                 className="mt-1"
                             />
                             <p className="text-xs text-slate-400 mt-1">How many times this code can be redeemed before it expires.</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label>Start Date</Label>
+                                <Input
+                                    type="date"
+                                    value={form.startDate}
+                                    onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
+                                    className="mt-1"
+                                />
+                                <p className="text-xs text-slate-400 mt-1">Defaults to today.</p>
+                            </div>
+                            <div>
+                                <Label>Expire Date</Label>
+                                <Input
+                                    type="date"
+                                    value={form.expireDate}
+                                    min={form.startDate}
+                                    onChange={(e) => setForm((f) => ({ ...f, expireDate: e.target.value }))}
+                                    className="mt-1"
+                                />
+                                <p className="text-xs text-slate-400 mt-1">Leave empty for no expiry.</p>
+                            </div>
                         </div>
                     </div>
                     <DialogFooter>

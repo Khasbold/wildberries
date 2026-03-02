@@ -2,11 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card.
 import { Badge } from '../components/ui/Badge.jsx'
 import { useAdmin } from '../../modules/state/useAdmin.js'
 
-function formatCurrencyRub(n) {
+function formatCurrency(n) {
     try {
-        return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(n)
+        return new Intl.NumberFormat('mn-MN', { maximumFractionDigits: 0 }).format(Math.round(n)) + '₮'
     } catch {
-        return `${Math.round(n)} ₽`
+        return `${Math.round(n)}₮`
     }
 }
 
@@ -26,7 +26,7 @@ export default function DashboardPage() {
                 </Card>
                 <Card>
                     <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-slate-500">Total Revenue</CardTitle></CardHeader>
-                    <CardContent><p className="text-3xl font-bold text-slate-900">{formatCurrencyRub(stats.revenue)}</p></CardContent>
+                    <CardContent><p className="text-3xl font-bold text-slate-900">{formatCurrency(stats.revenue)}</p></CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-slate-500">Accepted Orders</CardTitle></CardHeader>
@@ -55,7 +55,7 @@ export default function DashboardPage() {
                                     </div>
                                     <div className="text-right">
                                         <p className="text-sm font-medium">{c.ordersCount} orders</p>
-                                        <p className="text-xs text-slate-500">{formatCurrencyRub(c.totalSpent)}</p>
+                                        <p className="text-xs text-slate-500">{formatCurrency(c.totalSpent)}</p>
                                     </div>
                                 </div>
                             ))}

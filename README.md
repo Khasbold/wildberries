@@ -1,4 +1,4 @@
-# Wildberries Clone (React + Vite + Tailwind)
+# Wildberries (React + Vite + Tailwind)
 
 A Wildberries-inspired ecommerce UI with modern storefront flows, advanced catalog filters, wishlist/cart persistence, and a polished responsive layout.
 

@@ -11,6 +11,7 @@ const ADMIN_SESSION_KEY = 'wb_admin_session'
 const ADMIN_DISCOUNTS_KEY = 'wb_admin_discounts'
 const HIGHLIGHTS_KEY = 'wb_highlights'
 const BANNERS_KEY = 'wb_banners'
+const VIEWS_KEY = 'wb_product_views'
 
 /* ─── Tier plans ─── */
 export const TIER_PLANS = {
@@ -39,9 +40,9 @@ const listeners = new Set()
 /* ─── Default admin users (SuperAdmin + demo Store Owners) ─── */
 function getDefaultAdminUsers() {
     return [
-        { id: 'sa-1', username: 'superadmin', password: 'superadmin', name: 'Super Admin', role: 'superadmin', storeId: null, storeName: null, tier: null },
-        { id: 'admin-1', username: 'admin1', password: 'admin1', name: 'Admin One', role: 'admin', storeId: 'store-1', storeName: 'Fashion Hub', tier: 'free' },
-        { id: 'admin-2', username: 'admin2', password: 'admin2', name: 'Admin Two', role: 'admin', storeId: 'store-2', storeName: 'TechWorld', tier: 'free' },
+        { id: 'sa-1', username: 'superadmin', password: 'superadmin', name: 'Super Admin', role: 'superadmin', storeId: null, storeName: null, storeImage: null, tier: null },
+        { id: 'admin-1', username: 'admin1', password: 'admin1', name: 'Admin One', role: 'admin', storeId: 'store-1', storeName: 'Fashion Hub', storeImage: null, tier: 'free' },
+        { id: 'admin-2', username: 'admin2', password: 'admin2', name: 'Admin Two', role: 'admin', storeId: 'store-2', storeName: 'TechWorld', storeImage: null, tier: 'free' },
     ]
 }
 
@@ -61,8 +62,8 @@ function getDefaultAdminCategories() {
 
 function getDefaultAdminDiscounts() {
     return [
-        { id: 'disc-1', code: 'FASHION20', storeId: 'store-1', discountValue: 20, quantity: 50, usedCount: 0, active: true, createdAt: new Date().toISOString() },
-        { id: 'disc-2', code: 'TECH15', storeId: 'store-2', discountValue: 15, quantity: 30, usedCount: 0, active: true, createdAt: new Date().toISOString() },
+        { id: 'disc-1', code: 'FASHION20', storeId: 'store-1', discountValue: 20, quantity: 50, usedCount: 0, active: true, startDate: new Date().toISOString().slice(0, 10), expireDate: '', createdAt: new Date().toISOString() },
+        { id: 'disc-2', code: 'TECH15', storeId: 'store-2', discountValue: 15, quantity: 30, usedCount: 0, active: true, startDate: new Date().toISOString().slice(0, 10), expireDate: '', createdAt: new Date().toISOString() },
     ]
 }
 
@@ -144,6 +145,7 @@ const store = {
     adminDiscounts: (readLocalStorageJSON(ADMIN_DISCOUNTS_KEY, getDefaultAdminDiscounts())),
     highlights: /** @type {{ [storeId: string]: string }} */ (readLocalStorageJSON(HIGHLIGHTS_KEY, {})),
     banners: /** @type {{ id: string, image: string, title: string, order: number }[]} */ (readLocalStorageJSON(BANNERS_KEY, [])),
+    productViews: /** @type {{ [productId: string]: number }} */ (readLocalStorageJSON(VIEWS_KEY, {})),
 }
 
 let snapshot = {
@@ -158,6 +160,7 @@ let snapshot = {
     adminDiscounts: store.adminDiscounts,
     highlights: store.highlights,
     banners: store.banners,
+    productViews: store.productViews,
 }
 
 function emit() {
@@ -173,6 +176,7 @@ function emit() {
         adminDiscounts: store.adminDiscounts,
         highlights: store.highlights,
         banners: store.banners,
+        productViews: store.productViews,
     }
     for (const l of listeners) l()
 }
@@ -252,6 +256,20 @@ export function updateProfile(payload) {
     emit()
 }
 
+/* ─── Product views ─── */
+export function trackProductView(productId) {
+    store.productViews = {
+        ...store.productViews,
+        [productId]: (store.productViews[productId] || 0) + 1,
+    }
+    writeLocalStorageJSON(VIEWS_KEY, store.productViews)
+    emit()
+}
+
+export function getProductViews(productId) {
+    return store.productViews[productId] || 0
+}
+
 export function createOrder(payload) {
     const order = {
         id: `ORD-${Date.now()}`,
@@ -318,6 +336,7 @@ export function upsertAdminProduct(payload) {
             brand: payload?.brand || 'Brand',
             category: payload?.category || 'Accessories',
             price: Number(payload?.price || 0),
+            originalPrice: payload?.originalPrice ? Number(payload.originalPrice) : 0,
             rating: Number(payload?.rating || 0),
             inStock: stockQty > 0,
             fastDelivery: Boolean(payload?.fastDelivery),
@@ -326,6 +345,7 @@ export function upsertAdminProduct(payload) {
             sizes: Array.isArray(payload?.sizes) ? payload.sizes : [],
             image: payload?.image || '',
             thumbnail: payload?.thumbnail || payload?.image || '',
+            images: Array.isArray(payload?.images) ? payload.images : [],
             description: payload?.description || '',
         }
         store.adminProducts = [newProduct, ...store.adminProducts]
@@ -421,6 +441,7 @@ export function adminLogin(username, password) {
         role: user.role,
         storeId: user.storeId,
         storeName: user.storeName,
+        storeImage: user.storeImage || null,
         tier: user.tier || null,
         name: user.name,
         username: user.username,
@@ -469,12 +490,19 @@ export function updateAdminUser(userId, payload) {
     if (store.adminSession?.userId === userId) {
         const updated = store.adminUsers.find((u) => u.id === userId)
         if (updated) {
-            store.adminSession = { ...store.adminSession, storeName: updated.storeName, tier: updated.tier || null, name: updated.name, username: updated.username }
+            store.adminSession = { ...store.adminSession, storeName: updated.storeName, storeImage: updated.storeImage || null, tier: updated.tier || null, name: updated.name, username: updated.username }
             writeLocalStorageJSON(ADMIN_SESSION_KEY, store.adminSession)
         }
     }
     writeLocalStorageJSON(ADMIN_USERS_KEY, store.adminUsers)
     emit()
+}
+
+export function updateStoreProfile(payload) {
+    const session = store.adminSession
+    if (!session || session.role !== 'admin') return { ok: false, error: 'Only store owners can update profile.' }
+    updateAdminUser(session.userId, payload)
+    return { ok: true }
 }
 
 export function buyTierForCurrentStore(tierId) {
@@ -515,6 +543,8 @@ export function upsertAdminDiscount(payload) {
             quantity: Number(payload?.quantity || 1),
             usedCount: 0,
             active: payload?.active !== false,
+            startDate: payload?.startDate || new Date().toISOString().slice(0, 10),
+            expireDate: payload?.expireDate || '',
             createdAt: new Date().toISOString(),
         }
         store.adminDiscounts = [newDiscount, ...store.adminDiscounts]
@@ -536,8 +566,11 @@ export function resetAdminDiscounts() {
 }
 
 export function validateDiscountCode(code) {
+    const today = new Date().toISOString().slice(0, 10)
     const disc = store.adminDiscounts.find(
         (d) => d.code === code.toUpperCase().trim() && d.active && (d.quantity - d.usedCount) > 0
+            && (!d.startDate || d.startDate <= today)
+            && (!d.expireDate || d.expireDate >= today)
     )
     return disc || null
 }

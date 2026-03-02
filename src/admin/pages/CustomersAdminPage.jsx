@@ -2,11 +2,11 @@ import { useAdmin } from '../../modules/state/useAdmin.js'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card.jsx'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '../components/ui/Table.jsx'
 
-function formatCurrencyRub(n) {
+function formatCurrency(n) {
     try {
-        return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(n)
+        return new Intl.NumberFormat('mn-MN', { maximumFractionDigits: 0 }).format(Math.round(n)) + '₮'
     } catch {
-        return `${Math.round(n)} ₽`
+        return `${Math.round(n)}₮`
     }
 }
 
@@ -39,7 +39,7 @@ export default function CustomersAdminPage() {
                                     <TableCell>{customer.email}</TableCell>
                                     <TableCell>{customer.phone}</TableCell>
                                     <TableCell>{customer.ordersCount}</TableCell>
-                                    <TableCell>{formatCurrencyRub(customer.totalSpent)}</TableCell>
+                                    <TableCell>{formatCurrency(customer.totalSpent)}</TableCell>
                                 </TableRow>
                             ))
                         )}

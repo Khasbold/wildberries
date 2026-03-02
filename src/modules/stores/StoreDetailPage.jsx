@@ -29,9 +29,13 @@ export default function StoreDetailPage() {
 
             {/* Store header */}
             <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
-                <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xl sm:text-2xl font-extrabold shrink-0">
-                    {store.name?.slice(0, 2)?.toUpperCase() || 'ST'}
-                </div>
+                {store.image ? (
+                    <img src={store.image} alt={store.name} className="h-12 w-12 sm:h-16 sm:w-16 rounded-2xl object-cover shrink-0" />
+                ) : (
+                    <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xl sm:text-2xl font-extrabold shrink-0">
+                        {store.name?.slice(0, 2)?.toUpperCase() || 'ST'}
+                    </div>
+                )}
                 <div>
                     <h1 className="text-xl sm:text-2xl font-semibold">{store.name}</h1>
                     <p className="text-slate-500 text-sm">by {store.owner} · {products.length} {products.length === 1 ? 'product' : 'products'}</p>

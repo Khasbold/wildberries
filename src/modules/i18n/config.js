@@ -3,9 +3,9 @@ import { I18n } from 'i18n-js'
 const LOCALE_KEY = 'wb_locale'
 
 export const LOCALES = {
-    ru: { code: 'ru', label: 'Русский', flag: '🇷🇺' },
-    mn: { code: 'mn', label: 'Монгол', flag: '🇲🇳' },
-    en: { code: 'en', label: 'English', flag: '🇬🇧' },
+    ru: { code: 'ru', label: 'Русский', flag: 'RU' },
+    mn: { code: 'mn', label: 'Монгол', flag: 'MN' },
+    en: { code: 'en', label: 'English', flag: 'GB' },
 }
 
 export const CATEGORY_TRANSLATIONS = {
@@ -60,7 +60,7 @@ const translations = {
             seeAll: 'Смотреть все',
             weekNew: 'Новинки недели',
             toCatalog: 'Перейти в каталог',
-            topRated: 'Топ по рейтингу',
+            topRated: 'Самые просматриваемые',
         },
         catalog: {
             title: 'Каталог',
@@ -104,6 +104,7 @@ const translations = {
             inStock: 'В наличии',
             preOrder: 'Под заказ',
             share: 'Поделиться',
+            watched: 'Просмотрено',
             similar: 'Похожие товары',
             description: 'Описание',
             specs: 'Характеристики',
@@ -213,6 +214,18 @@ const translations = {
         },
         sideMenu: {
             categories: 'Категории',
+            certificates: 'Сертификаты',
+            brands: 'Бренды',
+            stores: 'Магазины',
+        },
+        loginModal: {
+            title: 'Войти',
+            subtitle: 'Введите данные для продолжения',
+            namePlaceholder: 'Ваше полное имя',
+            phonePlaceholder: '+976 ...',
+            emailPlaceholder: 'email@example.com',
+            fillRequired: 'Пожалуйста, заполните имя и email.',
+            guestNote: 'Вы также можете оформить заказ без авторизации.',
         },
     },
     mn: {
@@ -257,7 +270,7 @@ const translations = {
             seeAll: 'Бүгдийг харах',
             weekNew: 'Энэ долоо хоногийн шинэ',
             toCatalog: 'Каталог руу',
-            topRated: 'Өндөр үнэлгээтэй',
+            topRated: 'Хамгийн их үзсэн',
         },
         catalog: {
             title: 'Каталог',
@@ -301,6 +314,7 @@ const translations = {
             inStock: 'Нөөцтэй',
             preOrder: 'Захиалгаар',
             share: 'Хуваалцах',
+            watched: 'Үзсэн',
             similar: 'Төстэй бараа',
             description: 'Тайлбар',
             specs: 'Үзүүлэлт',
@@ -406,10 +420,22 @@ const translations = {
             about: 'Төслийн тухай',
             jobs: 'Ажлын байр',
             contacts: 'Холбоо барих',
-            note: 'Сургалт ба портфолиод зориулсан demo ecommerce UI clone.',
+            note: 'Сургалт ба портфолиод зориулсан demo ecommerce',
         },
         sideMenu: {
             categories: 'Ангилал',
+            certificates: 'Гэрчилгээ',
+            brands: 'Брэнд',
+            stores: 'Дэлгүүрүүд',
+        },
+        loginModal: {
+            title: 'Нэвтрэх',
+            subtitle: 'Нэвтрэхийн тулд мэдээллээ оруулна уу',
+            namePlaceholder: 'Таны бүтэн нэр',
+            phonePlaceholder: '+976 ...',
+            emailPlaceholder: 'email@example.com',
+            fillRequired: 'Нэр болон имэйл хаягаа бөглөнө үү.',
+            guestNote: 'Та нэвтрэлгүйгээр зочноор захиалга хийх боломжтой.',
         },
     },
     en: {
@@ -454,7 +480,7 @@ const translations = {
             seeAll: 'See all',
             weekNew: 'New this week',
             toCatalog: 'Go to catalog',
-            topRated: 'Top rated',
+            topRated: 'Most watched',
         },
         catalog: {
             title: 'Catalog',
@@ -498,6 +524,7 @@ const translations = {
             inStock: 'In stock',
             preOrder: 'Pre-order',
             share: 'Share',
+            watched: 'Watched',
             similar: 'Similar products',
             description: 'Description',
             specs: 'Specs',
@@ -603,10 +630,22 @@ const translations = {
             about: 'About project',
             jobs: 'Jobs',
             contacts: 'Contacts',
-            note: 'Demo ecommerce UI clone for learning and portfolio.',
+            note: 'Demo ecommerce UI for learning and portfolio.',
         },
         sideMenu: {
             categories: 'Categories',
+            certificates: 'Certificates',
+            brands: 'Brands',
+            stores: 'Stores',
+        },
+        loginModal: {
+            title: 'Sign In',
+            subtitle: 'Enter your details to continue',
+            namePlaceholder: 'Your full name',
+            phonePlaceholder: '+976 ...',
+            emailPlaceholder: 'you@example.com',
+            fillRequired: 'Please fill in name and email.',
+            guestNote: 'You can also checkout as a guest without signing in.',
         },
     },
 }

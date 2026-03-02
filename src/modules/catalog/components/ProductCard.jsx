@@ -3,11 +3,11 @@ import { useCart } from '../../state/useCart.js'
 import { useWishlist } from '../../state/useWishlist.js'
 import { useI18n } from '../../i18n/useI18n.js'
 
-function formatCurrencyRub(n) {
+function formatCurrency(n) {
 	try {
-		return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(n)
+		return new Intl.NumberFormat('mn-MN', { maximumFractionDigits: 0 }).format(Math.round(n)) + '₮'
 	} catch {
-		return `${Math.round(n)} ₽`
+		return `${Math.round(n)}₮`
 	}
 }
 
@@ -57,8 +57,8 @@ export default function ProductCard({ product }) {
 	const { addToCart } = useCart()
 	const { isInWishlist, toggleWishlist } = useWishlist()
 	const wished = isInWishlist(product.id)
-	const oldPrice = Math.round(product.price * 3.55)
-	const discount = Math.max(0, Math.round((1 - product.price / oldPrice) * 100))
+	const oldPrice = product.originalPrice && product.originalPrice > product.price ? Math.round(product.originalPrice) : 0
+	const discount = oldPrice > 0 ? Math.max(0, Math.round((1 - product.price / oldPrice) * 100)) : 0
 	const reviews = pseudoReviews(product.id)
 
 	return (
@@ -77,11 +77,10 @@ export default function ProductCard({ product }) {
 				>
 					{wished ? <IconHeartFilled /> : '♡'}
 				</button>
-				{/* Small promo pills at bottom-left */}
+				{/* Sale badge & promo pills at bottom-left */}
 				<div className="absolute left-1.5 sm:left-2 bottom-1.5 sm:bottom-2 flex flex-col gap-0.5 sm:gap-1 leading-none">
-					<span className="inline-flex w-max px-1.5 sm:px-2 py-0.5 rounded-full bg-rose-600 text-white text-[9px] sm:text-[11px] font-bold">-{discount}%</span>
-					<span className="hidden xs:inline-flex w-max px-1.5 sm:px-2 py-0.5 rounded-full bg-pink-500 text-white text-[9px] sm:text-[11px] font-bold">-9% с клубом</span>
-					<span className="hidden sm:inline-flex w-max px-1.5 sm:px-2 py-0.5 rounded-full bg-cyan-600 text-white text-[9px] sm:text-[11px] font-bold">₽ 60 за отзыв</span>
+					{discount > 0 && <span className="inline-flex w-max px-2 sm:px-2.5 py-1 sm:py-1 rounded-md bg-rose-600 text-white text-[11px] sm:text-sm font-bold shadow-sm">-{discount}%</span>}
+					<span className="hidden sm:inline-flex w-max px-1.5 sm:px-2 py-0.5 rounded-full bg-cyan-600 text-white text-[9px] sm:text-[11px] font-bold">₮ 60 за отзыв</span>
 					<span className="hidden sm:inline-flex w-max px-1.5 sm:px-2 py-0.5 rounded-full bg-orange-500 text-white text-[9px] sm:text-[11px] font-semibold">СКИДКИ ПОСПЕЛИ</span>
 				</div>
 				{/* Quick view pill on hover */}
@@ -93,15 +92,15 @@ export default function ProductCard({ product }) {
 			<div className="p-2 sm:p-3 flex-1 flex flex-col gap-1 sm:gap-1.5">
 				<Link to={`/product/${product.id}`} className="font-medium line-clamp-2 hover:underline leading-tight text-[12px] sm:text-[14px]">{product.title}</Link>
 				<div className="flex items-end gap-1.5 sm:gap-2 mt-0.5">
-					<p className="text-rose-600 text-[17px] sm:text-[22px] font-extrabold leading-none">{formatCurrencyRub(product.price)}</p>
-					<p className="text-[10px] sm:text-xs text-gray-500 line-through leading-none">{formatCurrencyRub(oldPrice)}</p>
+					<p className="text-rose-600 text-[17px] sm:text-[22px] font-extrabold leading-none">{formatCurrency(product.price)}</p>
+					{oldPrice > 0 && <p className="text-[10px] sm:text-xs text-gray-500 line-through leading-none">{formatCurrency(oldPrice)}</p>}
 				</div>
-				<p className="text-[11px] text-rose-600/80 leading-none">{t('productCard.withWallet')}</p>
+				{oldPrice > 0 && <p className="text-[11px] text-rose-600/80 leading-none">{t('productCard.withWallet')}</p>}
 				<div className="text-[12px] text-gray-800 flex items-center gap-1 leading-tight">
 					<span className="flex items-center gap-1"><IconCheck /><span className="font-medium">{product.brand}</span></span>
 				</div>
 				<div className="text-[12px] text-gray-700 flex items-center gap-1 leading-tight">
-					<span className="flex items-center gap-1 text-amber-500"><IconStar /> {product.rating.toFixed(1)}</span>
+					<span className="flex items-center gap-1 text-amber-500"><IconStar /> {(product.rating || 0).toFixed(1)}</span>
 					<span className="text-gray-400">•</span>
 					<span className="text-gray-500">{t('productCard.reviews', { count: new Intl.NumberFormat('ru-RU').format(reviews) })}</span>
 				</div>

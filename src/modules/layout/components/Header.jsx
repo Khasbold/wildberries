@@ -5,6 +5,7 @@ import { useWishlist } from '../../state/useWishlist.js'
 import { useAuth } from '../../state/useAuth.js'
 import { products } from '../../data/products.js'
 import SideMenu from './SideMenu.jsx'
+import LoginModal from './LoginModal.jsx'
 import { useI18n } from '../../i18n/useI18n.js'
 import { LOCALES } from '../../i18n/config.js'
 
@@ -68,6 +69,7 @@ export default function Header() {
 	const [query, setQuery] = useState('')
 	const [openCart, setOpenCart] = useState(false)
 	const [openMenu, setOpenMenu] = useState(false)
+	const [showLoginModal, setShowLoginModal] = useState(false)
 	const [showSearchDropdown, setShowSearchDropdown] = useState(false)
 	const [showLangDropdown, setShowLangDropdown] = useState(false)
 	const cartRef = useRef(null)
@@ -95,11 +97,11 @@ export default function Header() {
 			.slice(0, 6)
 	}, [query])
 
-	function formatCurrencyRub(n) {
+	function formatCurrency(n) {
 		try {
-			return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(n)
+			return new Intl.NumberFormat('mn-MN', { maximumFractionDigits: 0 }).format(Math.round(n)) + '₮'
 		} catch {
-			return `${Math.round(n)} ₽`
+			return `${Math.round(n)}₮`
 		}
 	}
 
@@ -167,13 +169,13 @@ export default function Header() {
 
 					<nav className="order-2 sm:order-3 flex items-center gap-1 xs:gap-2 sm:gap-4 text-[10px] sm:text-xs ml-auto shrink-0">
 						<div className="relative" ref={langRef}>
-							<button className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/15 hover:bg-white/25" onClick={() => setShowLangDropdown((v) => !v)}>
-								<span>{localeMeta.flag}</span>
-								<span className="hidden sm:inline">{localeMeta.label}</span>
+							<button className="flex items-center gap-1.5 px-2.5 py-2 sm:py-2.5 rounded-xl bg-white/15 hover:bg-white/25 transition-colors" onClick={() => setShowLangDropdown((v) => !v)}>
+								<img src={`https://flagcdn.com/w40/${localeMeta.flag.toLowerCase()}.png`} alt={localeMeta.label} className="w-5 h-4 object-cover rounded-sm" />
+								<span className="hidden sm:inline text-sm">{localeMeta.label}</span>
 								<span className="text-[10px]">▾</span>
 							</button>
 							{showLangDropdown && (
-								<div className="absolute right-0 top-[34px] bg-white text-slate-900 rounded-xl shadow-card border border-slate-200 w-36 overflow-hidden">
+								<div className="absolute right-0 top-full mt-1 bg-white text-slate-900 rounded-xl shadow-card border border-slate-200 w-44 overflow-hidden z-50">
 									{Object.values(LOCALES).map((item) => (
 										<button
 											key={item.code}
@@ -182,9 +184,10 @@ export default function Header() {
 												setLocale(item.code)
 												setShowLangDropdown(false)
 											}}
-											className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-50 ${locale === item.code ? 'bg-slate-100' : ''}`}
+											className={`w-full text-left px-3 py-2.5 text-sm hover:bg-slate-50 flex items-center gap-2.5 transition-colors ${locale === item.code ? 'bg-slate-100 font-medium' : ''}`}
 										>
-											{item.flag} {item.label}
+											<img src={`https://flagcdn.com/w40/${item.flag.toLowerCase()}.png`} alt={item.label} className="w-5 h-4 object-cover rounded-sm" />
+											{item.label}
 										</button>
 									))}
 								</div>
@@ -194,18 +197,17 @@ export default function Header() {
 							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 21V10l9-7 9 7v11H3z" stroke="currentColor" strokeWidth="1.5"/><rect x="9" y="14" width="6" height="7" rx="1" stroke="currentColor" strokeWidth="1.5"/></svg>
 							<span className="mt-1">Stores</span>
 						</NavLink>
-						<button className="hidden lg:flex flex-col items-center hover:opacity-90">
-							<IconMapPin className="text-white" />
-							<span className="mt-1">{t('header.addresses')}</span>
-						</button>
-						<NavLink to="/account" className="flex flex-col items-center hover:opacity-90">
-							<IconUser className="text-white" />
-							<span className="mt-1 hidden sm:inline">{isAuthenticated ? user.name || t('header.account') : t('header.signIn')}</span>
-						</NavLink>
-						<NavLink to="/orders" className="hidden md:flex flex-col items-center hover:opacity-90">
-							<span className="w-5 h-5 rounded-full border border-white/70 flex items-center justify-center text-[10px]">#</span>
-							<span className="mt-1">{t('common.orders')}</span>
-						</NavLink>
+						{isAuthenticated ? (
+							<NavLink to="/account" className="flex flex-col items-center hover:opacity-90">
+								<IconUser className="text-white" />
+								<span className="mt-1 hidden sm:inline">{user.name || t('header.account')}</span>
+							</NavLink>
+						) : (
+							<button onClick={() => setShowLoginModal(true)} className="flex flex-col items-center hover:opacity-90">
+								<IconUser className="text-white" />
+								<span className="mt-1 hidden sm:inline">{t('header.signIn')}</span>
+							</button>
+						)}
 						<NavLink to="/wishlist" className="flex flex-col items-center hover:opacity-90">
 							<div className="relative">
 								<IconHeart className="text-white" />
@@ -238,7 +240,7 @@ export default function Header() {
 											<img src={i.product.thumbnail} alt={i.product.title} className="w-14 h-14 rounded object-cover" />
 											<div className="flex-1">
 												<p className="text-sm font-medium line-clamp-1">{i.product.title}</p>
-												<p className="text-xs text-slate-600">x{i.quantity} • {formatCurrencyRub(i.product.price)}</p>
+												<p className="text-xs text-slate-600">x{i.quantity} • {formatCurrency(i.product.price)}</p>
 											</div>
 										</div>
 									))
@@ -246,7 +248,7 @@ export default function Header() {
 							</div>
 							<div className="p-4 flex items-center justify-between">
 								<p className="font-semibold">{t('common.total')}</p>
-								<p className="font-semibold">{formatCurrencyRub(subtotal)}</p>
+								<p className="font-semibold">{formatCurrency(subtotal)}</p>
 							</div>
 							<div className="p-4 pt-0 flex gap-2">
 								<Link to="/cart" className="btn-outline flex-1 text-center" onClick={() => setOpenCart(false)}>{t('common.cart')}</Link>
@@ -258,6 +260,7 @@ export default function Header() {
 				</div>
 			</div>
 			<SideMenu open={openMenu} onClose={() => setOpenMenu(false)} />
+			<LoginModal open={showLoginModal} onClose={() => setShowLoginModal(false)} />
 		</header>
 	)
 } 

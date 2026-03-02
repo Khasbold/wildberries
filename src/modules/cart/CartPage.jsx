@@ -45,11 +45,11 @@ export default function CartPage() {
 
 	const itemCount = useMemo(() => detailed.reduce((sum, item) => sum + item.quantity, 0), [detailed])
 
-	function formatCurrencyRub(n) {
+	function formatCurrency(n) {
 		try {
-			return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(n)
+			return new Intl.NumberFormat('mn-MN', { maximumFractionDigits: 0 }).format(Math.round(n)) + '₮'
 		} catch {
-			return `${Math.round(n)} ₽`
+			return `${Math.round(n)}₮`
 		}
 	}
 
@@ -68,7 +68,7 @@ export default function CartPage() {
 								<img src={i.product.thumbnail} alt={i.product.title} className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded shrink-0" />
 								<div className="flex-1 min-w-0">
 									<p className="font-medium text-sm sm:text-base truncate">{i.product.title}</p>
-									<p className="text-sm text-gray-500">{formatCurrencyRub(i.product.price)}</p>
+								<p className="text-sm text-gray-500">{formatCurrency(i.product.price)}</p>
 									<p className="text-xs text-gray-500">{i.product.fastDelivery ? t('common.deliveryTomorrow') : t('cart.shippingSlow')}</p>
 								</div>
 								<div className="flex items-center gap-1.5 sm:gap-2 self-stretch sm:self-auto flex-wrap">
@@ -94,7 +94,7 @@ export default function CartPage() {
 								{promoError && <p className="text-xs text-red-500 mt-2">{promoError}</p>}
 								{appliedDiscount && (
 									<p className="text-xs text-emerald-600 mt-2">
-										✓ Code <span className="font-mono font-semibold">{appliedDiscount.code}</span> applied — {appliedDiscount.discountValue} ₽ off
+										✓ Code <span className="font-mono font-semibold">{appliedDiscount.code}</span> applied — {appliedDiscount.discountValue} ₮ off
 									</p>
 								)}
 							</div>
@@ -105,19 +105,19 @@ export default function CartPage() {
 						<div className="space-y-2 text-sm text-gray-600 mb-4">
 							<div className="flex justify-between">
 								<span>{t('cart.items', { count: itemCount })}</span>
-								<span>{formatCurrencyRub(subtotal)}</span>
+								<span>{formatCurrency(subtotal)}</span>
 							</div>
 							<div className="flex justify-between">
 								<span>{t('cart.discount')}</span>
-								<span className="text-emerald-600">−{formatCurrencyRub(discount)}</span>
+								<span className="text-emerald-600">−{formatCurrency(discount)}</span>
 							</div>
 							<div className="flex justify-between">
 								<span>{t('cart.delivery')}</span>
-								<span>{delivery === 0 ? t('common.free') : formatCurrencyRub(delivery)}</span>
+							<span>{delivery === 0 ? t('common.free') : formatCurrency(delivery)}</span>
 							</div>
 							<div className="border-t pt-2 mt-2 flex justify-between text-base text-slate-900 font-semibold">
 								<span>{t('cart.toPay')}</span>
-								<span>{formatCurrencyRub(total)}</span>
+								<span>{formatCurrency(total)}</span>
 							</div>
 						</div>
 						<div className="flex items-center gap-2">

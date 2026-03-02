@@ -6,11 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card.
 import { Badge } from '../components/ui/Badge.jsx'
 import { Separator } from '../components/ui/Separator.jsx'
 
-function formatCurrencyRub(n) {
+function formatCurrency(n) {
     try {
-        return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(n)
+        return new Intl.NumberFormat('mn-MN', { maximumFractionDigits: 0 }).format(Math.round(n)) + '₮'
     } catch {
-        return `${Math.round(n)} ₽`
+        return `${Math.round(n)}₮`
     }
 }
 
@@ -78,7 +78,7 @@ export default function OrderDetailsAdminPage() {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-sm">x{line.quantity}</p>
-                                    <p className="text-xs text-slate-500">{formatCurrencyRub((line.product?.price || 0) * line.quantity)}</p>
+                                    <p className="text-xs text-slate-500">{formatCurrency((line.product?.price || 0) * line.quantity)}</p>
                                 </div>
                             </div>
                         ))}
@@ -108,10 +108,10 @@ export default function OrderDetailsAdminPage() {
                     <Card>
                         <CardHeader><CardTitle>Amount</CardTitle></CardHeader>
                         <CardContent className="text-sm space-y-2">
-                            <div className="flex justify-between"><span className="text-slate-500">Subtotal</span><span>{formatCurrencyRub(order.subtotal || 0)}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">Subtotal</span><span>{formatCurrency(order.subtotal || 0)}</span></div>
                             <div className="flex justify-between">
                                 <span className="text-slate-500">Discount</span>
-                                <span className="text-emerald-600">-{formatCurrencyRub(order.discount || 0)}</span>
+                                <span className="text-emerald-600">-{formatCurrency(order.discount || 0)}</span>
                             </div>
                             {order.discountCode && (
                                 <div className="flex justify-between items-center">
@@ -119,9 +119,9 @@ export default function OrderDetailsAdminPage() {
                                     <Badge variant="outline" className="font-mono text-xs">{order.discountCode}</Badge>
                                 </div>
                             )}
-                            <div className="flex justify-between"><span className="text-slate-500">Delivery</span><span>{formatCurrencyRub(order.delivery || 0)}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">Delivery</span><span>{formatCurrency(order.delivery || 0)}</span></div>
                             <Separator />
-                            <div className="flex justify-between font-semibold"><span>Total</span><span>{formatCurrencyRub(order.total || 0)}</span></div>
+                            <div className="flex justify-between font-semibold"><span>Total</span><span>{formatCurrency(order.total || 0)}</span></div>
                         </CardContent>
                     </Card>
                 </div>

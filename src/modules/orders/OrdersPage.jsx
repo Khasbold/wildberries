@@ -9,11 +9,11 @@ export default function OrdersPage() {
     const { orders, clearOrders } = useOrders()
     const { addToCart } = useCart()
 
-    function formatCurrencyRub(n) {
+    function formatCurrency(n) {
         try {
-            return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(n)
+            return new Intl.NumberFormat('mn-MN', { maximumFractionDigits: 0 }).format(Math.round(n)) + '₮'
         } catch {
-            return `${Math.round(n)} ₽`
+            return `${Math.round(n)}₮`
         }
     }
 
@@ -55,14 +55,14 @@ export default function OrdersPage() {
                                     return (
                                         <div key={line.productId} className="flex items-center justify-between gap-2 text-sm">
                                             <span className="truncate">{product.title} × {line.quantity}</span>
-                                            <span>{formatCurrencyRub(product.price * line.quantity)}</span>
+                                            <span>{formatCurrency(product.price * line.quantity)}</span>
                                         </div>
                                     )
                                 })}
                             </div>
 
                             <div className="flex items-center justify-between border-t pt-3">
-                                <p className="font-semibold">{t('orders.total')} {formatCurrencyRub(order.total)}</p>
+                                <p className="font-semibold">{t('orders.total')} {formatCurrency(order.total)}</p>
                                 <div className="flex items-center gap-2">
                                     {order.items.slice(0, 2).map((line) => (
                                         <button key={line.productId} className="btn-outline" onClick={() => addToCart(line.productId, line.quantity)}>{t('orders.repeatItem')}</button>

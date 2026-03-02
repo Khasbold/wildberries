@@ -8,12 +8,14 @@ import DashboardPage from './pages/DashboardPage.jsx'
 import OrdersAdminPage from './pages/OrdersAdminPage.jsx'
 import OrderDetailsAdminPage from './pages/OrderDetailsAdminPage.jsx'
 import ProductsAdminPage from './pages/ProductsAdminPage.jsx'
+import ProductEditorPage from './pages/ProductEditorPage.jsx'
 import CategoriesAdminPage from './pages/CategoriesAdminPage.jsx'
 import CustomersAdminPage from './pages/CustomersAdminPage.jsx'
 import DiscountsPage from './pages/DiscountsPage.jsx'
 import TierListPage from './pages/TierListPage.jsx'
 import HighlightsAdminPage from './pages/HighlightsAdminPage.jsx'
 import BannerAdminPage from './pages/BannerAdminPage.jsx'
+import StoreProfilePage from './pages/StoreProfilePage.jsx'
 
 export default function AdminApp() {
     const { isLoggedIn, isSuperAdmin } = useSession()
@@ -32,6 +34,8 @@ export default function AdminApp() {
                         <Route path="orders" element={<OrdersAdminPage />} />
                         <Route path="orders/:orderId" element={<OrderDetailsAdminPage />} />
                         <Route path="products" element={<ProductsAdminPage />} />
+                        <Route path="products/new" element={<ProductEditorPage />} />
+                        <Route path="products/:id/edit" element={<ProductEditorPage />} />
                         <Route path="categories" element={<CategoriesAdminPage />} />
                         <Route path="customers" element={<CustomersAdminPage />} />
                         <Route path="discounts" element={<DiscountsPage />} />
@@ -42,9 +46,12 @@ export default function AdminApp() {
                 ) : (
                     <>
                         <Route index element={<DashboardPage />} />
+                        <Route path="profile" element={<StoreProfilePage />} />
                         <Route path="orders" element={<OrdersAdminPage />} />
                         <Route path="orders/:orderId" element={<OrderDetailsAdminPage />} />
                         <Route path="products" element={<ProductsAdminPage />} />
+                        <Route path="products/new" element={<ProductEditorPage />} />
+                        <Route path="products/:id/edit" element={<ProductEditorPage />} />
                         <Route path="categories" element={<CategoriesAdminPage />} />
                         <Route path="customers" element={<CustomersAdminPage />} />
                         <Route path="discounts" element={<DiscountsPage />} />

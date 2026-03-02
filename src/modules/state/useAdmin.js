@@ -13,6 +13,7 @@ import {
     resetOrders,
     subscribe,
     updateOrderStatus,
+    updateStoreProfile,
     upsertAdminCategory,
     upsertAdminProduct,
     upsertAdminDiscount,
@@ -106,5 +107,6 @@ export function useAdmin() {
         deleteAdminDiscount,
         resetAdminDiscounts,
         buyTierForCurrentStore,
+        updateStoreProfile,
     }
 }

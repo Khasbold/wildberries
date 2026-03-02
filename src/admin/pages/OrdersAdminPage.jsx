@@ -19,7 +19,7 @@ function fmt(n) {
   try {
     return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(Number(n || 0))
   } catch {
-    return `${Math.round(Number(n || 0))} ₽`
+    return `${Math.round(Number(n || 0))} ₮`
   }
 }
 

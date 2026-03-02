@@ -1,16 +1,17 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { products } from '../data/products.js'
 import { useCart } from '../state/useCart.js'
 import { useWishlist } from '../state/useWishlist.js'
+import { trackProductView, getProductViews, subscribe, getState } from '../state/store.js'
 import { FaHeart, FaRegHeart, FaShareAlt, FaChevronDown, FaStar, FaCheck, FaMinus, FaPlus } from 'react-icons/fa'
 import { useI18n } from '../i18n/useI18n.js'
 
-function formatCurrencyRub(n) {
+function formatCurrency(n) {
 	try {
-		return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(n)
+		return new Intl.NumberFormat('mn-MN', { maximumFractionDigits: 0 }).format(Math.round(n)) + '₮'
 	} catch {
-		return `${Math.round(n)} ₽`
+		return `${Math.round(n)}₮`
 	}
 }
 
@@ -136,7 +137,7 @@ function Lightbox({ gallery, startIndex, onClose }) {
 }
 
 /* ─── Main Gallery (inline) ─── */
-function ProductGallery({ gallery, productTitle, discount }) {
+function ProductGallery({ gallery, productTitle }) {
 	const [activeIdx, setActiveIdx] = useState(0)
 	const [lightboxOpen, setLightboxOpen] = useState(false)
 	const [touchStart, setTouchStart] = useState(null)
@@ -172,13 +173,6 @@ function ProductGallery({ gallery, productTitle, discount }) {
 					<span className="absolute top-3 left-3 z-10 bg-black/50 text-white text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-sm">
 						{activeIdx + 1} / {gallery.length}
 					</span>
-
-					{/* Discount badge */}
-					{discount > 0 && (
-						<span className="absolute top-3 right-14 z-10 bg-rose-600 text-white text-[11px] font-bold px-2.5 py-1 rounded-full">
-							-{discount}%
-						</span>
-					)}
 
 					{/* Prev / Next arrows on hover */}
 					{gallery.length > 1 && (
@@ -289,13 +283,26 @@ function ProductGallery({ gallery, productTitle, discount }) {
 export default function ProductPage() {
 	const { t } = useI18n()
 	const { id } = useParams()
-	const product = useMemo(() => products.find((p) => p.id === id), [id])
+	const state = useSyncExternalStore(subscribe, getState)
+	const product = useMemo(() => {
+		const fromSeed = products.find((p) => p.id === id)
+		if (fromSeed) return fromSeed
+		return (state.adminProducts || []).find((p) => p.id === id) || null
+	}, [id, state.adminProducts])
 	const { addToCart } = useCart()
 	const { isInWishlist, toggleWishlist } = useWishlist()
 	const [selectedColor, setSelectedColor] = useState(null)
 	const [size, setSize] = useState('')
 	const [quantity, setQuantity] = useState(1)
 	const [tab, setTab] = useState('desc')
+	const [viewCount, setViewCount] = useState(0)
+
+	useEffect(() => {
+		if (id) {
+			trackProductView(id)
+			setViewCount(getProductViews(id))
+		}
+	}, [id])
 
 	if (!product) return <div className="container-app py-8"><p>{t('product.notFound')}</p></div>
 
@@ -306,23 +313,41 @@ export default function ProductPage() {
 		{ key: 'questions', label: t('product.questions') },
 	]
 
-	const gallery = [
-		{ type: 'image', src: product.image, thumb: product.thumbnail },
-		{ type: 'video', src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', thumb: product.thumbnail },
-		{ type: 'image', src: product.thumbnail, thumb: product.thumbnail },
-		{ type: 'image', src: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=400&q=80', thumb: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=220&q=80' },
-		{ type: 'image', src: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=400&q=80', thumb: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=220&q=80' },
-		{ type: 'image', src: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80', thumb: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=220&q=80' },
-	]
-	const oldPrice = Math.round(product.price * 3.2)
-	const discount = Math.max(0, Math.round((1 - product.price / oldPrice) * 100))
+	const gallery = useMemo(() => {
+		const imgs = []
+		// Use product.images array if available (admin-uploaded), otherwise fallback
+		const productImages = Array.isArray(product.images) && product.images.length > 0 ? product.images : []
+		if (productImages.length > 0) {
+			productImages.forEach((src) => {
+				imgs.push({ type: 'image', src, thumb: src })
+			})
+		} else {
+			if (product.image) imgs.push({ type: 'image', src: product.image, thumb: product.thumbnail || product.image })
+			if (product.thumbnail && product.thumbnail !== product.image) imgs.push({ type: 'image', src: product.thumbnail, thumb: product.thumbnail })
+			// Add some stock filler images for seed products
+			imgs.push(
+				{ type: 'image', src: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=400&q=80', thumb: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=220&q=80' },
+				{ type: 'image', src: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=400&q=80', thumb: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=220&q=80' },
+			)
+		}
+		if (imgs.length === 0) imgs.push({ type: 'image', src: 'https://via.placeholder.com/600', thumb: 'https://via.placeholder.com/200' })
+		return imgs
+	}, [product])
+	const oldPrice = product.originalPrice && product.originalPrice > product.price ? Math.round(product.originalPrice) : 0
+	const discount = oldPrice > 0 ? Math.max(0, Math.round((1 - product.price / oldPrice) * 100)) : 0
 	const wished = isInWishlist(product.id)
 	const productColors = product.colors?.length ? product.colors : ['#000000']
 	const productSizes = product.sizes?.length ? product.sizes : []
 	const stockQty = product.stockQuantity ?? (product.inStock ? 10 : 0)
 	const isAvailable = stockQty > 0
 
-	const offers = products
+	const allProducts = useMemo(() => {
+		const adminP = state.adminProducts || []
+		const seedIds = new Set(products.map((p) => p.id))
+		return [...products, ...adminP.filter((p) => !seedIds.has(p.id))]
+	}, [state.adminProducts])
+
+	const offers = allProducts
 		.filter((p) => p.category === product.category && p.id !== product.id)
 		.slice(0, 3)
 
@@ -343,7 +368,6 @@ export default function ProductPage() {
 					<ProductGallery
 						gallery={gallery}
 						productTitle={product.title}
-						discount={discount}
 					/>
 				</div>
 
@@ -358,8 +382,22 @@ export default function ProductPage() {
 							<p className="text-sm font-semibold text-amber-600 uppercase tracking-wide mb-2">Only {stockQty} left</p>
 						)}
 
-						{/* Title */}
-						<h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-snug mb-3">{product.title}</h1>
+						{/* Title + wishlist */}
+						<div className="flex items-start gap-2 mb-2">
+							<h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-snug flex-1">{product.title}</h1>
+							<button
+								onClick={() => toggleWishlist(product.id)}
+								className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-gray-200 hover:bg-rose-50 flex items-center justify-center transition-colors mt-0.5"
+								title="Wishlist"
+							>
+								{wished ? <FaHeart className="text-rose-500 text-lg sm:text-xl" /> : <FaRegHeart className="text-gray-400 text-lg sm:text-xl" />}
+							</button>
+						</div>
+
+						{/* Discount badge */}
+						{discount > 0 && (
+							<span className="inline-block bg-rose-600 text-white text-sm font-bold px-3 py-1 rounded-lg mb-3">-{discount}%</span>
+						)}
 
 						{/* Rating & reviews */}
 						<div className="flex items-center gap-1.5 mb-4">
@@ -367,17 +405,17 @@ export default function ProductPage() {
 								{[1, 2, 3, 4, 5].map((star) => (
 									<FaStar
 										key={star}
-										className={`text-sm ${star <= Math.round(product.rating) ? 'text-amber-400' : 'text-gray-200'}`}
+										className={`text-sm ${star <= Math.round(product.rating || 0) ? 'text-amber-400' : 'text-gray-200'}`}
 									/>
 								))}
 							</div>
-							<span className="text-sm text-gray-500">({(product.rating * 430).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}k reviews)</span>
+							<span className="text-sm text-gray-500">({((product.rating || 0) * 430).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}k reviews)</span>
 						</div>
 
 						{/* Price */}
 						<div className="flex items-baseline gap-2 sm:gap-3 mb-1">
-							<p className="text-gray-400 line-through text-base sm:text-lg">${oldPrice.toFixed(2)}</p>
-							<p className="text-xl sm:text-2xl font-extrabold text-gray-900">${product.price.toFixed(2)}</p>
+							{oldPrice > 0 && <p className="text-gray-400 line-through text-base sm:text-lg">{formatCurrency(oldPrice)}</p>}
+							<p className="text-xl sm:text-2xl font-extrabold text-gray-900">{formatCurrency(product.price)}</p>
 						</div>
 
 						{/* Description */}
@@ -506,11 +544,11 @@ export default function ProductPage() {
 							</div>
 						</div>
 
-						{/* Share */}
-						<div className="mt-3 flex gap-2 border-t border-gray-100 pt-3">
-							<button onClick={() => toggleWishlist(product.id)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-rose-500">
-								{wished ? <FaHeart className="text-rose-500" /> : <FaRegHeart />} Wishlist
-							</button>
+						{/* Views & Share */}
+						<div className="mt-3 flex items-center gap-3 border-t border-gray-100 pt-3">
+							<span className="flex items-center gap-1.5 text-sm text-gray-400">
+								{t('product.watched')} {viewCount}
+							</span>
 							<button className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 ml-auto">
 								<FaShareAlt /> {t('product.share')}
 							</button>
@@ -528,7 +566,7 @@ export default function ProductPage() {
 										<p className="text-sm text-gray-900 truncate">{o.title}</p>
 										<p className="text-xs text-gray-500 truncate">{o.brand}</p>
 									</div>
-									<p className="text-sm font-semibold text-rose-600">{formatCurrencyRub(o.price)}</p>
+									<p className="text-sm font-semibold text-rose-600">{formatCurrency(o.price)}</p>
 								</Link>
 							))}
 						</div>
@@ -651,7 +689,7 @@ export default function ProductPage() {
 							<img src={o.thumbnail} alt={o.title} className="w-24 h-24 object-cover rounded mb-2" />
 							<p className="text-sm text-gray-900 truncate w-full">{o.title}</p>
 							<p className="text-xs text-gray-500 truncate w-full">{o.brand}</p>
-							<p className="text-sm font-semibold text-rose-600 w-full">{formatCurrencyRub(o.price)}</p>
+						<p className="text-sm font-semibold text-rose-600 w-full">{formatCurrency(o.price)}</p>
 						</Link>
 					))}
 				</div>

@@ -11,8 +11,15 @@ const gradients = [
     'from-fuchsia-500 to-pink-600',
 ]
 
-function StoreIcon({ name, index }) {
+function StoreIcon({ name, index, image }) {
     const grad = gradients[index % gradients.length]
+    if (image) {
+        return (
+            <div className="w-full aspect-[4/3] sm:aspect-square overflow-hidden rounded-t-2xl">
+                <img src={image} alt={name} className="w-full h-full object-cover" />
+            </div>
+        )
+    }
     return (
         <div className={`w-full aspect-[4/3] sm:aspect-square bg-gradient-to-br ${grad} rounded-t-2xl flex items-center justify-center`}>
             <span className="text-white text-3xl sm:text-5xl font-extrabold tracking-tighter select-none">
@@ -51,7 +58,7 @@ export default function StoresPage() {
                                 to={`/stores/${store.id}`}
                                 className="group rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden hover:shadow-md transition-shadow"
                             >
-                                <StoreIcon name={store.name} index={i} />
+                                <StoreIcon name={store.name} index={i} image={store.image} />
                                 <div className="p-3 sm:p-4 space-y-1.5 sm:space-y-2">
                                     <h2 className="font-semibold text-sm sm:text-lg leading-tight group-hover:text-brand transition-colors truncate">
                                         {store.name}

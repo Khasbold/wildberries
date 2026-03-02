@@ -9,7 +9,7 @@ export default function Layout({ children }) {
 			<div className="sticky top-0 z-50 backdrop-blur-sm">
 				<TopBar />
 				<Header />
-				<CategoryBar />
+				{/* <CategoryBar /> */}
 			</div>
 			<main className="flex-1 pb-8">
 				{children}

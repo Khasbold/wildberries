@@ -1,5 +1,5 @@
 import { Link, NavLink } from 'react-router-dom'
-import { LayoutDashboard, ShoppingBag, Package, Users, Tags, Store, LogOut, Shield, Ticket, Crown, Sparkles, Image } from 'lucide-react'
+import { LayoutDashboard, ShoppingBag, Package, Users, Tags, Store, LogOut, Shield, Ticket, Crown, Sparkles, Image, UserCircle } from 'lucide-react'
 import { Button } from './components/ui/Button.jsx'
 import { useSession } from '../modules/state/useSession.js'
 import { Badge } from './components/ui/Badge.jsx'
@@ -20,6 +20,7 @@ const superAdminMenu = [
 
 const storeAdminMenu = [
     { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
+    { to: '/admin/profile', label: 'Store Profile', icon: UserCircle },
     { to: '/admin/orders', label: 'Orders', icon: ShoppingBag },
     { to: '/admin/products', label: 'Products', icon: Package },
     { to: '/admin/discounts', label: 'Discounts', icon: Ticket },
@@ -75,9 +76,13 @@ export default function AdminLayout({ children }) {
                     {!isSuperAdmin && session?.storeName && (
                         <div className="mb-3 mx-1 p-3 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100">
                             <div className="flex items-center gap-2">
-                                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
-                                    {session.storeName[0]}
-                                </div>
+                                {session.storeImage ? (
+                                    <img src={session.storeImage} alt={session.storeName} className="h-8 w-8 rounded-lg object-cover" />
+                                ) : (
+                                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                                        {session.storeName[0]}
+                                    </div>
+                                )}
                                 <div>
                                     <p className="text-sm font-semibold text-slate-900">{session.storeName}</p>
                                     <p className="text-[10px] text-slate-500">{session.storeId}</p>
