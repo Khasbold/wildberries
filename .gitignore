@@ -5,3 +5,7 @@ reactNative/
 .env
 .env.*
 *.log
+
+# Do not commit Firebase / GCP service account keys
+service_key.json
+**/service_account*.json

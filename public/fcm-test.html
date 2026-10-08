@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head><title>FCM Token Test</title></head>
+<body style="font-family:monospace;padding:2rem;background:#111;color:#0f0">
+<h2>FCM Diagnostic</h2>
+<pre id="log"></pre>
+<button id="btn" style="padding:10px 20px;font-size:16px;margin-top:1rem;cursor:pointer">Get FCM Token</button>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js'
+import { getMessaging, getToken, isSupported } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-messaging.js'
+
+const log = document.getElementById('log')
+function print(msg, color) {
+    const line = document.createElement('div')
+    line.style.color = color || '#0f0'
+    line.textContent = (new Date().toLocaleTimeString()) + ' ' + msg
+    log.appendChild(line)
+}
+
+const config = {
+    apiKey: "AIzaSyD-GozHKGEvzqhF-WAi01u40VV75GDWKvw",
+    authDomain: "bunny-5c403.firebaseapp.com",
+    projectId: "bunny-5c403",
+    storageBucket: "bunny-5c403.firebasestorage.app",
+    messagingSenderId: "877928513764",
+    appId: "1:877928513764:web:373c37feff43c818522cf1",
+    measurementId: "G-K4V2PBWGVF"
+}
+const VAPID_KEY = "BHCDIkMiRJxTFSJdl9KnK84voj4DzfcOYr7UYjdg4roBSD9_iFh_Oz3cneztJZc_lyBKFGNU9Ia1SZq1qJxq67A"
+
+print('1. Browser: SW=' + ('serviceWorker' in navigator) + ' Notif=' + ('Notification' in window) + ' Push=' + ('PushManager' in window))
+print('2. Notification.permission = ' + Notification.permission)
+
+let app, messaging
+try {
+    app = initializeApp(config)
+    const ok = await isSupported()
+    messaging = ok ? getMessaging(app) : null
+    print('3. Firebase init OK, messaging supported: ' + ok)
+} catch(e) { print('3. ERROR: ' + e.message, 'red') }
+
+function waitForActivation(reg) {
+    return new Promise((resolve) => {
+        if (reg.active && reg.active.state === 'activated') return resolve(reg)
+        const sw = reg.installing || reg.waiting || reg.active
+        if (!sw) return resolve(reg)
+        sw.addEventListener('statechange', function handler() {
+            if (sw.state === 'activated') {
+                sw.removeEventListener('statechange', handler)
+                resolve(reg)
+            }
+        })
+    })
+}
+
+document.getElementById('btn').onclick = async () => {
+    print('--- Click ---', 'yellow')
+    try {
+        const perm = await Notification.requestPermission()
+        print('4. Permission: ' + perm)
+        if (perm !== 'granted') return
+
+        print('5. Registering SW...')
+        const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
+        await waitForActivation(reg)
+        print('   SW activated (' + reg.active?.state + ')')
+
+        print('6. Calling getToken...')
+        const token = await getToken(messaging, {
+            vapidKey: VAPID_KEY,
+            serviceWorkerRegistration: reg,
+        })
+
+        if (token) {
+            print('SUCCESS! FCM Token:', '#0f0')
+            print(token, 'cyan')
+            window.__FCM_TOKEN__ = token
+            const ta = document.createElement('textarea')
+            ta.value = token
+            ta.style.cssText = 'width:100%;height:80px;margin-top:10px;font-size:11px;background:#222;color:cyan;border:1px solid #0f0;padding:8px'
+            document.body.appendChild(ta)
+            ta.select()
+        } else {
+            print('ERROR: getToken returned empty', 'red')
+        }
+    } catch(e) {
+        print('ERROR: ' + e.name + ': ' + e.message, 'red')
+    }
+}
+</script>
+</body>
+</html>

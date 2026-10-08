@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, Star } from 'lucide-react'
+import { toast } from 'react-toastify'
+import { AlertTriangle, Star, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { useAdmin } from '../../modules/state/useAdmin.js'
 import { useSession } from '../../modules/state/useSession.js'
-import { TIER_PLANS } from '../../modules/state/store.js'
+import { TIER_PLANS, upsertAdminProduct } from '../../modules/state/store.js'
 import { setHighlightProduct, removeHighlightProduct, subscribe, getState } from '../../modules/state/store.js'
 import { useSyncExternalStore } from 'react'
 import { Button } from '../components/ui/Button.jsx'
@@ -26,7 +27,7 @@ export default function ProductsAdminPage() {
 
     const currentPlan = tier ? TIER_PLANS[tier] : null
     const myProductCount = products.length
-    const tierLimitReached = !isSuperAdmin && currentPlan && myProductCount >= currentPlan.maxProducts
+    const tierLimitReached = !isSuperAdmin && currentPlan && currentPlan.maxProducts !== -1 && myProductCount >= currentPlan.maxProducts
 
     /* store owner tabs for superadmin */
     const storeTabs = useMemo(() => {
@@ -41,8 +42,15 @@ export default function ProductsAdminPage() {
             list = list.filter((p) => p.storeId === storeTab)
         }
         const q = query.trim().toLowerCase()
-        if (!q) return list
-        return list.filter((p) => p.title.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q))
+        if (q) {
+            list = list.filter((p) => p.title.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q))
+        }
+        // Sort: pending/under-review products at top
+        return [...list].sort((a, b) => {
+            const aP = (a.approvalStatus || 'approved') === 'pending' ? 0 : 1
+            const bP = (b.approvalStatus || 'approved') === 'pending' ? 0 : 1
+            return aP - bP
+        })
     }, [products, query, storeTab, isSuperAdmin])
 
     function handleAddProduct() {
@@ -58,16 +66,16 @@ export default function ProductsAdminPage() {
         <div className="space-y-6">
             <Card>
                 <CardHeader className="space-y-3">
-                    <div className="flex flex-row items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                         <CardTitle className="text-lg">Products List</CardTitle>
-                        <div className="flex items-center gap-2">
-                            <Input className="w-64" placeholder="Search products…" value={query} onChange={(e) => setQuery(e.target.value)} />
-                            <Button variant="outline" size="sm" onClick={resetAdminProducts}>Reset seeded</Button>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Input className="w-full sm:w-64" placeholder="Search products…" value={query} onChange={(e) => setQuery(e.target.value)} />
                             {!isSuperAdmin && <Button size="sm" onClick={handleAddProduct}>Add Product</Button>}
                         </div>
                     </div>
                     {isSuperAdmin && storeTabs.length > 0 && (
                         <Tabs value={storeTab} onValueChange={setStoreTab}>
+                            <div className="overflow-x-auto scrollbar-hide">
                             <TabsList>
                                 <TabsTrigger value="all">
                                     All Stores
@@ -83,6 +91,7 @@ export default function ProductsAdminPage() {
                                     )
                                 })}
                             </TabsList>
+                            </div>
                         </Tabs>
                     )}
                 </CardHeader>
@@ -108,7 +117,7 @@ export default function ProductsAdminPage() {
                     </div>
                 )}
 
-                <CardContent className="p-0">
+                <CardContent className="p-0 overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -119,19 +128,20 @@ export default function ProductsAdminPage() {
                                 {isSuperAdmin && <TableHead>Store</TableHead>}
                                 <TableHead>Price</TableHead>
                                 <TableHead>Stock</TableHead>
+                                <TableHead>Approval</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {visible.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={isSuperAdmin ? 8 : 7} className="h-24 text-center text-slate-400">No products found.</TableCell>
+                                    <TableCell colSpan={isSuperAdmin ? 9 : 8} className="h-24 text-center text-slate-400">No products found.</TableCell>
                                 </TableRow>
                             ) : (
                                 visible.map((product) => {
                                     const ownerInfo = isSuperAdmin ? adminUsers.find((u) => u.storeId === product.storeId) : null
                                     return (
-                                        <TableRow key={product.id} className="cursor-pointer hover:bg-slate-50" onClick={() => navigate(`/admin/products/${product.id}/edit`)}>
+                                        <TableRow key={product.id} className={`cursor-pointer hover:bg-slate-50${product.isDraft ? ' opacity-50' : ''}`} onClick={() => navigate(`/admin/products/${product.id}/edit`)}>
                                             <TableCell className="w-12">
                                                 {product.thumbnail ? (
                                                     <img src={product.thumbnail} alt="" className="w-10 h-10 rounded-lg object-cover" />
@@ -139,7 +149,7 @@ export default function ProductsAdminPage() {
                                                     <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 text-xs">img</div>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="font-medium">{product.title}</TableCell>
+                                            <TableCell className="font-medium">{product.title}{product.isDraft && <span className="ml-1.5 text-[10px] bg-slate-200 text-slate-600 rounded px-1.5 py-0.5 font-medium">Ноорог</span>}</TableCell>
                                             <TableCell>{product.brand}</TableCell>
                                             <TableCell>{product.category}</TableCell>
                                             {isSuperAdmin && (
@@ -159,6 +169,28 @@ export default function ProductsAdminPage() {
                                                         ? `${product.stockQuantity ?? 10} in stock`
                                                         : 'Out of stock'}
                                                 </Badge>
+                                            </TableCell>
+                                            <TableCell onClick={(e) => e.stopPropagation()}>
+                                                {(() => {
+                                                    const status = product.approvalStatus || 'approved'
+                                                    if (status === 'approved') return <Badge className="bg-emerald-100 text-emerald-800"><CheckCircle size={10} className="mr-1" />Approved</Badge>
+                                                    if (status === 'rejected') return <Badge className="bg-red-100 text-red-800"><XCircle size={10} className="mr-1" />Rejected</Badge>
+                                                    return (
+                                                        <div className="flex items-center gap-1">
+                                                            <Badge className="bg-amber-100 text-amber-800"><Clock size={10} className="mr-1" />Under Review</Badge>
+                                                            {isSuperAdmin && (
+                                                                <>
+                                                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={() => { upsertAdminProduct({ id: product.id, approvalStatus: 'approved' }); toast.success('Бүтээгдэхүүн зөвшөөрөгдлөө') }}>
+                                                                        <CheckCircle size={14} />
+                                                                    </Button>
+                                                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => { upsertAdminProduct({ id: product.id, approvalStatus: 'rejected' }); toast.info('Бүтээгдэхүүн татгалзагдлаа') }}>
+                                                                        <XCircle size={14} />
+                                                                    </Button>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    )
+                                                })()}
                                             </TableCell>
                                             <TableCell className="text-right space-x-1" onClick={(e) => e.stopPropagation()}>
                                                 {!isSuperAdmin && tier && tier !== 'free' && (
@@ -185,7 +217,12 @@ export default function ProductsAdminPage() {
                                                     })()
                                                 )}
                                                 <Button size="sm" variant="outline" onClick={() => navigate(`/admin/products/${product.id}/edit`)}>Edit</Button>
-                                                <Button size="sm" variant="destructive" onClick={() => deleteAdminProduct(product.id)}>Delete</Button>
+                                                <Button size="sm" variant="destructive" onClick={() => {
+                                                    if (window.confirm(`Delete "${product.title}"?`)) {
+                                                        deleteAdminProduct(product.id)
+                                                        toast.success(`"${product.title}" deleted`, { position: 'top-right', autoClose: 2500 })
+                                                    }
+                                                }}>Delete</Button>
                                             </TableCell>
                                         </TableRow>
                                     )

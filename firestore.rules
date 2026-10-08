@@ -1,0 +1,134 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function authed() {
+      return request.auth != null;
+    }
+
+    /**
+     * Store owner self-registration: users/{firebaseAuthUid} with admin + free tier.
+     * loginEmail must match the Auth email (lowercased in app + token).
+     */
+    match /users/{userId} {
+      allow read: if true;
+
+      allow create: if authed()
+        && request.auth.uid == userId
+        && request.resource.data.role == 'admin'
+        && request.resource.data.tier == 'free'
+        && request.resource.data.id == userId
+        && request.resource.data.loginEmail is string;
+
+      allow update, delete: if authed();
+    }
+
+    match /products/{id} {
+      allow read: if true;
+      allow write: if authed();
+    }
+
+    match /categories/{id} {
+      allow read: if true;
+      allow write: if authed();
+    }
+
+    match /banners/{id} {
+      allow read: if true;
+      allow write: if authed();
+    }
+
+    match /discounts/{id} {
+      allow read: if true;
+      allow write: if authed();
+    }
+
+    match /highlights/{id} {
+      allow read: if true;
+      allow write: if authed();
+    }
+
+    match /productViews/{docId} {
+      allow read, write: if true;
+    }
+
+    function validOrderCreate() {
+      let d = request.resource.data;
+      return d.items is list
+        && d.items.size() > 0
+        && d.items.size() <= 50
+        && d.total is number
+        && d.total >= 0
+        && d.customer is map
+        && d.customer.keys().hasAll(['name', 'phone', 'email'])
+        && d.customer.name is string
+        && d.customer.phone is string
+        && d.customer.email is string;
+    }
+
+    match /orders/{id} {
+      allow read: if authed();
+      allow create: if authed() && validOrderCreate();
+      allow update, delete: if authed();
+
+      match /messages/{msgId} {
+        allow read: if authed();
+        allow create: if authed()
+          && request.resource.data.senderId is string
+          && request.resource.data.senderRole in ['customer', 'store']
+          && request.resource.data.text is string
+          && request.resource.data.text.size() <= 1000;
+      }
+    }
+
+    match /notifications/{id} {
+      allow read, write: if authed();
+    }
+
+    match /adminNotifications/{id} {
+      allow read, write: if authed();
+    }
+
+    match /clientNotifications/{id} {
+      allow read, write: if authed();
+    }
+
+    match /carts/{id} {
+      allow read, write: if true;
+    }
+
+    match /wishlists/{id} {
+      allow read, write: if true;
+    }
+
+    match /customerProfiles/{uid} {
+      allow read, write: if authed() && request.auth.uid == uid;
+    }
+
+    match /usernames/{username} {
+      allow read: if true;
+      allow create: if authed() && request.resource.data.uid == request.auth.uid;
+      allow update: if authed() && resource.data.uid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    match /customerTokens/{uid} {
+      allow read: if authed();
+      allow write: if authed() && request.auth.uid == uid;
+    }
+
+    match /siteVisits/{date} {
+      allow read, write: if true;
+    }
+
+    match /feedbacks/{id} {
+      allow read: if authed();
+      allow create: if authed();
+      allow update, delete: if authed();
+    }
+
+    match /tierChangeHistory/{id} {
+      allow read, write: if authed();
+    }
+  }
+}

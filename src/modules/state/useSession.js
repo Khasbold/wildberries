@@ -1,10 +1,20 @@
-import { useSyncExternalStore } from 'react'
-import { subscribe, getState, adminLogin, adminLogout } from './store.js'
+import { useCallback, useSyncExternalStore } from 'react'
+import { subscribe, getState, adminLogout } from './store.js'
+import { signOut } from '../../firebase/authService.js'
 
 export function useSession() {
     const state = useSyncExternalStore(subscribe, getState)
     const session = state.adminSession
     const adminUsers = state.adminUsers
+
+    const logout = useCallback(async () => {
+        try {
+            await signOut()
+        } catch {
+            /* ignore */
+        }
+        adminLogout()
+    }, [])
 
     return {
         session,
@@ -15,7 +25,6 @@ export function useSession() {
         storeId: session?.storeId || null,
         storeName: session?.storeName || null,
         tier: session?.tier || null,
-        login: adminLogin,
-        logout: adminLogout,
+        logout,
     }
 }

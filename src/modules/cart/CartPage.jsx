@@ -1,19 +1,27 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useSyncExternalStore } from 'react'
+import { formatCurrency } from '../../utils/formatCurrency.js'
 import { Link } from 'react-router-dom'
 import { useCart } from '../state/useCart.js'
-import { products } from '../data/products.js'
-import { validateDiscountCode, useDiscountCode } from '../state/store.js'
+import { validateDiscountCode, subscribe, getState } from '../state/store.js'
 import { useI18n } from '../i18n/useI18n.js'
+import { ShoppingBag, Trash2, Tag } from 'lucide-react'
+import SEO from '../layout/components/SEO.jsx'
+
+function findProduct(id, adminProducts) {
+	return adminProducts.find((p) => p.id === id) || null
+}
 
 export default function CartPage() {
 	const { t } = useI18n()
+	const state = useSyncExternalStore(subscribe, getState)
+	const adminProducts = state.adminProducts || []
 	const { items, updateCartQuantity, removeFromCart, clearCart } = useCart()
 	const [promo, setPromo] = useState('')
 	const [appliedDiscount, setAppliedDiscount] = useState(null)
 	const [promoError, setPromoError] = useState('')
 	const detailed = items.map((i) => ({
 		...i,
-		product: products.find((p) => p.id === i.productId),
+		product: findProduct(i.productId, adminProducts),
 	})).filter((i) => i.product)
 
 	const subtotal = detailed.reduce((sum, i) => sum + i.product.price * i.quantity, 0)
@@ -21,8 +29,7 @@ export default function CartPage() {
 		? detailed.filter((i) => i.product.storeId === appliedDiscount.storeId).reduce((sum, i) => sum + i.product.price * i.quantity, 0)
 		: 0
 	const discount = appliedDiscount ? Math.min(appliedDiscount.discountValue, storeSubtotal) : 0
-	const delivery = subtotal > 80 ? 0 : 5
-	const total = Math.max(0, subtotal - discount + delivery)
+	const total = Math.max(0, subtotal - discount)
 
 	function handleApplyPromo() {
 		const code = promo.trim()
@@ -45,87 +52,103 @@ export default function CartPage() {
 
 	const itemCount = useMemo(() => detailed.reduce((sum, item) => sum + item.quantity, 0), [detailed])
 
-	function formatCurrency(n) {
-		try {
-			return new Intl.NumberFormat('mn-MN', { maximumFractionDigits: 0 }).format(Math.round(n)) + '₮'
-		} catch {
-			return `${Math.round(n)}₮`
-		}
-	}
-
 	return (
-		<div className="container-app py-4 sm:py-8">
-			<h1 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">{t('cart.title')}</h1>
-			{detailed.length === 0 ? (
-				<div className="card-surface p-6">
-					<p>{t('cart.empty')} <Link className="text-brand hover:underline" to="/catalog">{t('cart.toCatalog')}</Link></p>
-				</div>
-			) : (
-				<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
-					<div className="lg:col-span-2 space-y-3 sm:space-y-4">
-						{detailed.map((i) => (
-							<div key={i.productId} className="card-surface p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-								<img src={i.product.thumbnail} alt={i.product.title} className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded shrink-0" />
-								<div className="flex-1 min-w-0">
-									<p className="font-medium text-sm sm:text-base truncate">{i.product.title}</p>
-								<p className="text-sm text-gray-500">{formatCurrency(i.product.price)}</p>
-									<p className="text-xs text-gray-500">{i.product.fastDelivery ? t('common.deliveryTomorrow') : t('cart.shippingSlow')}</p>
-								</div>
-								<div className="flex items-center gap-1.5 sm:gap-2 self-stretch sm:self-auto flex-wrap">
-									<button className="btn-outline" onClick={() => updateCartQuantity(i.productId, Math.max(0, i.quantity - 1))}>−</button>
-									<span className="w-8 text-center">{i.quantity}</span>
-									<button className="btn-outline" onClick={() => updateCartQuantity(i.productId, i.quantity + 1)}>+</button>
-									<button className="btn-outline" onClick={() => removeFromCart(i.productId)}>{t('common.remove')}</button>
-								</div>
-							</div>
-						))}
-						<div className="card-surface p-4 flex items-center justify-between">
-							<div className="flex-1">
-								<p className="font-medium mb-2">{t('cart.promo')}</p>
-								<div className="flex gap-2">
-									<input
-										value={promo}
-										onChange={(e) => { setPromo(e.target.value); setPromoError(''); setAppliedDiscount(null) }}
-										placeholder={t('cart.promoPlaceholder')}
-										className="flex-1 border border-slate-200 rounded-xl px-3 py-2 font-mono uppercase"
-									/>
-									<button className="btn-primary" onClick={handleApplyPromo}>{t('common.apply')}</button>
-								</div>
-								{promoError && <p className="text-xs text-red-500 mt-2">{promoError}</p>}
-								{appliedDiscount && (
-									<p className="text-xs text-emerald-600 mt-2">
-										✓ Code <span className="font-mono font-semibold">{appliedDiscount.code}</span> applied — {appliedDiscount.discountValue} ₮ off
-									</p>
-								)}
-							</div>
+		<div className="min-h-[60vh] bg-gradient-to-b from-[#F7E9D7]/25 to-white">
+			<SEO title={t('cart.title')} />
+			<div className="container-app py-6 sm:py-10 animate-fade-in-up">
+				<div className="flex items-center justify-between mb-8">
+					<div className="flex items-center gap-3">
+						<div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[--brand-primary]/15 to-[--bg-beige] flex items-center justify-center shadow-soft">
+							<ShoppingBag className="w-6 h-6 text-[--brand-primary]" />
+						</div>
+						<div>
+							<h1 className="section-title text-2xl sm:text-3xl text-slate-900">{t('cart.title')}</h1>
+							<p className="text-sm text-slate-500">{t('cart.tagline') || 'Review items before checkout'}</p>
 						</div>
 					</div>
-					<div className="card-surface p-4 sm:p-6 h-max lg:sticky lg:top-40">
-						<p className="text-lg font-semibold mb-3">{t('cart.summary')}</p>
-						<div className="space-y-2 text-sm text-gray-600 mb-4">
-							<div className="flex justify-between">
-								<span>{t('cart.items', { count: itemCount })}</span>
-								<span>{formatCurrency(subtotal)}</span>
-							</div>
-							<div className="flex justify-between">
-								<span>{t('cart.discount')}</span>
-								<span className="text-emerald-600">−{formatCurrency(discount)}</span>
-							</div>
-							<div className="flex justify-between">
-								<span>{t('cart.delivery')}</span>
-							<span>{delivery === 0 ? t('common.free') : formatCurrency(delivery)}</span>
-							</div>
-							<div className="border-t pt-2 mt-2 flex justify-between text-base text-slate-900 font-semibold">
-								<span>{t('cart.toPay')}</span>
-								<span>{formatCurrency(total)}</span>
-							</div>
+					{detailed.length > 0 && (
+						<button
+							type="button"
+							className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 text-sm font-medium transition-all duration-200 active:scale-[0.97] focus-ring"
+							onClick={() => { clearCart(); setAppliedDiscount(null) }}
+						>
+							<Trash2 className="w-4 h-4" />
+							{t('cart.clear')}
+						</button>
+					)}
+				</div>
+
+				{detailed.length === 0 ? (
+					<div className="card-static rounded-3xl p-12 text-center max-w-lg mx-auto animate-scale-in">
+						<div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[--bg-beige] flex items-center justify-center animate-float shadow-soft">
+							<ShoppingBag className="w-9 h-9 text-[--brand-primary]" />
 						</div>
-						<div className="flex items-center gap-2">
-							<Link to="/checkout" className="btn-primary flex-1 text-center">{t('common.checkout')}</Link>
+						<p className="text-slate-600 text-lg mb-6">{t('cart.empty')}</p>
+						<Link to="/catalog" className="btn-primary inline-flex items-center justify-center px-8 active:scale-[0.97]">{t('cart.toCatalog')}</Link>
+					</div>
+				) : (
+					<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+						<div className="lg:col-span-2 space-y-3">
+							{detailed.map((i) => (
+								<div key={i.productId} className="card-static rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:shadow-card-hover transition-shadow duration-300">
+									<div className="img-zoom rounded-xl shrink-0 overflow-hidden border border-slate-100 shadow-soft">
+										<img src={i.product.thumbnail} alt={i.product.title} className="w-28 h-28 object-cover" loading="lazy" />
+									</div>
+									<div className="flex-1 min-w-0">
+										<p className="font-semibold text-slate-900">{i.product.title}</p>
+										<p className="text-[--brand-primary] font-bold mt-1 text-lg">{formatCurrency(i.product.price)}</p>
+										{(i.size || i.color) && (
+											<div className="flex items-center gap-2 mt-1.5">
+												{i.color && (
+													<span className="inline-flex items-center gap-1 text-xs text-slate-500">
+														<span className="w-4 h-4 rounded-full border-2 border-white ring-1 ring-slate-200 shadow-soft" style={{ backgroundColor: i.color }} />
+													</span>
+												)}
+												{i.size && (
+													<span className="badge">{i.size}</span>
+												)}
+											</div>
+										)}
+									</div>
+									<div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+										<div className="flex items-center gap-0.5 border border-slate-200 rounded-full p-1 bg-white shadow-soft">
+											<button type="button" className="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 font-bold hover:bg-[--bg-beige] hover:text-[--brand-primary] active:scale-[0.9] transition-all duration-200" onClick={() => updateCartQuantity(i.productId, Math.max(0, i.quantity - 1))}>−</button>
+											<span className="w-9 text-center font-bold text-slate-900">{i.quantity}</span>
+											<button type="button" className="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 font-bold hover:bg-[--bg-beige] hover:text-[--brand-primary] active:scale-[0.9] transition-all duration-200" onClick={() => updateCartQuantity(i.productId, i.quantity + 1)}>+</button>
+										</div>
+										<button type="button" className="flex items-center gap-1 text-sm text-rose-600 hover:text-rose-700 font-medium px-2.5 py-1.5 rounded-full hover:bg-rose-50 active:scale-[0.97] transition-all duration-200" onClick={() => removeFromCart(i.productId)}>
+											<Trash2 className="w-4 h-4" />
+											{t('common.remove')}
+										</button>
+									</div>
+								</div>
+							))}
+
+						</div>
+
+						<div className="card-static rounded-2xl p-6 h-max lg:sticky lg:top-28 shadow-card-elevated border-[--brand-primary]/15">
+							<p className="section-title text-lg text-slate-900 mb-5">{t('cart.summary')}</p>
+							<div className="space-y-3 text-sm mb-6">
+								<div className="flex justify-between text-slate-600">
+									<span>{t('cart.items', { count: itemCount })}</span>
+									<span className="font-medium text-slate-900">{formatCurrency(subtotal)}</span>
+								</div>
+								<div className="divider-soft" />
+								<div className="flex justify-between text-slate-600">
+									<span>{t('cart.discount')}</span>
+									<span className="text-[--brand-secondary] font-medium">−{formatCurrency(discount)}</span>
+								</div>
+								<div className="divider-soft" />
+								<div className="pt-2 flex justify-between text-lg font-bold text-slate-900">
+									<span>{t('cart.toPay')}</span>
+									<span className="text-gradient-brand text-xl">{formatCurrency(total)}</span>
+								</div>
+							</div>
+							<Link to="/checkout" className="btn-primary block w-full text-center py-3.5 active:scale-[0.97]">{t('common.checkout')}</Link>
 						</div>
 					</div>
-				</div>
-			)}
+				)}
+			</div>
 		</div>
 	)
-} 
+}

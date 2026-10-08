@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Ticket, Plus, Trash2, RotateCcw, ToggleLeft, ToggleRight } from 'lucide-react'
+import { toast } from 'react-toastify'
+import { Ticket, Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card.jsx'
 import { Button } from '../components/ui/Button.jsx'
 import { Input } from '../components/ui/Input.jsx'
@@ -68,8 +69,10 @@ export default function DiscountsPage() {
                 startDate: form.startDate,
                 expireDate: form.expireDate,
             })
+            toast.success(`"${code}" updated`, { position: 'top-right', autoClose: 2500 })
         } else {
             upsertAdminDiscount({ code, discountValue, quantity, startDate: form.startDate, expireDate: form.expireDate })
+            toast.success(`"${code}" created`, { position: 'top-right', autoClose: 2500 })
         }
         setDialogOpen(false)
     }
@@ -81,17 +84,13 @@ export default function DiscountsPage() {
     return (
         <div className="space-y-6">
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                         <Ticket size={20} className="text-slate-600" />
                         <CardTitle className="text-lg">Discount Codes</CardTitle>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Input className="w-64" placeholder="Search codes…" value={query} onChange={(e) => setQuery(e.target.value)} />
-                        <Button variant="outline" size="sm" onClick={resetAdminDiscounts}>
-                            <RotateCcw size={14} className="mr-1" />
-                            Reset
-                        </Button>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Input className="w-full sm:w-64" placeholder="Search codes…" value={query} onChange={(e) => setQuery(e.target.value)} />
                         {!isSuperAdmin && (
                             <Button size="sm" onClick={startCreate}>
                                 <Plus size={14} className="mr-1" />
@@ -100,7 +99,7 @@ export default function DiscountsPage() {
                         )}
                     </div>
                 </CardHeader>
-                <CardContent className="p-0">
+                <CardContent className="p-0 overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -184,7 +183,12 @@ export default function DiscountsPage() {
                                                         <Button size="sm" variant="outline" onClick={() => startEdit(disc)}>
                                                             Edit
                                                         </Button>
-                                                        <Button size="sm" variant="destructive" onClick={() => deleteAdminDiscount(disc.id)}>
+                                                        <Button size="sm" variant="destructive" onClick={() => {
+                                                            if (window.confirm(`Delete discount code "${disc.code}"?`)) {
+                                                                deleteAdminDiscount(disc.id)
+                                                                toast.success(`"${disc.code}" deleted`, { position: 'top-right', autoClose: 2500 })
+                                                            }
+                                                        }}>
                                                             <Trash2 size={14} />
                                                         </Button>
                                                     </>
@@ -266,7 +270,7 @@ export default function DiscountsPage() {
                             />
                             <p className="text-xs text-slate-400 mt-1">How many times this code can be redeemed before it expires.</p>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <Label>Start Date</Label>
                                 <Input
